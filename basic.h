@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/msg.h>
+#include <stdint.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <string.h>
