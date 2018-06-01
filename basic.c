@@ -353,7 +353,7 @@ char* generate_multi_copy(char*path_to_filename,char*filename){//ritorna path as
     }
     while(check_if_file_exist(absolute_path)){
         copy_number+=1;
-        if(copy_number>=UINT32_MAX){
+        if(copy_number>=__UINT32_MAX__){
             return NULL;
         }
         if(occurence==NULL) {//aggiungi alla fine del filename le parentesi e il numero
