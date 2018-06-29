@@ -43,17 +43,19 @@ void check_md5(char*filename,char*md5_to_check, long dimension) {//verifica che 
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 char* add_slash_to_dir(char*argument){
     char*dir;
     if(argument==NULL){
         handle_error_with_exit("error in add_slash argument is NULL\n");
     }
     if((argument[strlen(argument)-1])!='/'){
-        dir=malloc(sizeof(char)*(strlen(argument)+2));//1 per "/" uno per terminatore
+        dir=malloc(sizeof(char)*(strlen(argument)+2));//1 per "/"+ 1  per terminatore
         if(dir==NULL){
             handle_error_with_exit("error in malloc\n");
         }
-        memset(dir,'\0',strlen(argument)+2);
+        memset(dir,'\0',strlen(argument)+2);//azzero la memoria
         better_strcpy(dir,argument);
         better_strcat(dir,"/");
         dir[strlen(argument)+1]='\0';
@@ -69,6 +71,8 @@ char* add_slash_to_dir(char*argument){
     }
     return dir;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 
 void initialize_timeval(struct timespec *tv,int timer_ms){//funzione che somma i tempi di una struct e di un timer
 // mettendo il risultato dentro la struct
@@ -85,7 +89,10 @@ void initialize_timeval(struct timespec *tv,int timer_ms){//funzione che somma i
     }
     return;
 }
-void better_strcpy(char*buf1,char*buf2){//strcpy+controllo buffer
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+void better_strcpy(char*buf1,char*buf2){//strcpy+controllo buffer + stampa eventuali errori
     if(buf1==NULL){
         handle_error_with_exit("error better strcpy buf1 is NULL\n");
     }
@@ -95,7 +102,7 @@ void better_strcpy(char*buf1,char*buf2){//strcpy+controllo buffer
     strcpy(buf1,buf2);
     return;
 }
-void better_strncpy(char*buf1,char*buf2,int lenght){//strncpy+controllo buffer
+void better_strncpy(char*buf1,char*buf2,int lenght){//strncpy+controllo buffer + stampa errori
     if(buf1==NULL){
         handle_error_with_exit("error better strcpy buf1 is NULL\n");
     }
@@ -105,7 +112,7 @@ void better_strncpy(char*buf1,char*buf2,int lenght){//strncpy+controllo buffer
     strncpy(buf1,buf2,lenght);
     return;
 }
-void better_strcat(char*str1,char*str2){//strcat+controllo buffer
+void better_strcat(char*str1,char*str2){//strcat+controllo buffer + stampa errori
     if(str1==NULL){
         handle_error_with_exit("error better strcat str1 is NULL\n");
     }
@@ -115,6 +122,10 @@ void better_strcat(char*str1,char*str2){//strcat+controllo buffer
     strcat(str1,str2);
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+
 void set_max_buff_rcv_size(int sockfd){//imposta il buffer ricezione della socket al massimo possibile(senza root)
     int buff_size=BUFF_RCV_SIZE;
     if(setsockopt(sockfd,SOL_SOCKET,SO_RCVBUF,&buff_size,sizeof(buff_size))!=0){
@@ -145,6 +156,7 @@ key_t get_key(char c){
     }
     return key;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void block_signal(int signal){//non fa ricevere il segnale definito al thread chiamante
     sigset_t set;
     if(sigemptyset(&set)==-1){
@@ -158,6 +170,7 @@ void block_signal(int signal){//non fa ricevere il segnale definito al thread ch
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void unlock_signal(int signal){//fa ricevere il segnale definito al thread chiamante
     sigset_t set;
     if(sigemptyset(&set)==-1){
@@ -171,6 +184,7 @@ void unlock_signal(int signal){//fa ricevere il segnale definito al thread chiam
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void initialize_sem(sem_t*mtx){//inizializza semaforo
     if(mtx==NULL){
         handle_error_with_exit("error in initialize_sem mtx is NULL\n");
@@ -180,6 +194,7 @@ void initialize_sem(sem_t*mtx){//inizializza semaforo
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void initialize_mtx(pthread_mutex_t *mtx){//inizializza mutex
     if(mtx==NULL){
         handle_error_with_exit("error in initialize_mtx mtx is NULL\n");
@@ -189,6 +204,7 @@ void initialize_mtx(pthread_mutex_t *mtx){//inizializza mutex
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void lock_mtx(pthread_mutex_t *mtx){//lock mutex
     if(mtx==NULL){
         handle_error_with_exit("error in lock_mtx mtx is NULL\n");
@@ -237,6 +253,9 @@ void unlock_thread_on_a_condition(pthread_cond_t*cond){//sblocca un thread blocc
     }
     return;
 }
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 char check_if_dir_exist(char*dir_path){//verifica se una directory esiste
     if(dir_path==NULL){
         handle_error_with_exit("error in check if dir exist path is NULL\n");
@@ -248,11 +267,15 @@ char check_if_dir_exist(char*dir_path){//verifica se una directory esiste
     closedir(dir);
     return 1;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 void handle_error_with_exit(char*error_string){//uccide il processo dopo essersi accorto di un errore
     printf(RED "%s" RESET, error_string);
     perror("");
     exit(EXIT_FAILURE);
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 void copy_buf2_in_buf1(char*buf1,char*buf2,long dim){//copia dim byte da buf 2 a buf1
     if(buf2==NULL){
         handle_error_with_exit("buff 2 null\n");
@@ -506,7 +529,7 @@ long get_file_size(char*path){//ritorna la dimensione di un file dato un path
     }
     return st.st_size;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void lock_sem(sem_t*sem){//lock semaforo
     if(sem==NULL){
         handle_error_with_exit("error in lock_sem sem is NULL\n");
@@ -516,6 +539,7 @@ void lock_sem(sem_t*sem){//lock semaforo
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void unlock_sem(sem_t*sem){//unlock semaforo
     if(sem==NULL){
         handle_error_with_exit("error in unlock_sem sem is NULL\n");
@@ -525,6 +549,7 @@ void unlock_sem(sem_t*sem){//unlock semaforo
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int get_id_msg_queue(){//funzione che crea la coda di messaggi
     int msgid;
     if((msgid=msgget(IPC_PRIVATE,IPC_CREAT | 0666))==-1){
@@ -532,7 +557,7 @@ int get_id_msg_queue(){//funzione che crea la coda di messaggi
     }
     return msgid;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int get_id_shared_mem_with_key(int size,key_t key){//funzione che crea la memoria condivisa tra processi
     int shmid;
     if((shmid=shmget(key,(size_t)size,IPC_CREAT | 0666))==-1){
@@ -540,6 +565,7 @@ int get_id_shared_mem_with_key(int size,key_t key){//funzione che crea la memori
     }
     return shmid;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int get_id_shared_mem(int size){//funzione che crea la memoria condivisa tra processi
     int shmid;
     if((shmid=shmget(IPC_PRIVATE,(size_t)size,IPC_CREAT | 0666))==-1){
@@ -547,13 +573,18 @@ int get_id_shared_mem(int size){//funzione che crea la memoria condivisa tra pro
     }
     return shmid;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void*attach_shm(int shmid){//funzione che ritorna puntatore all'area di memoria condivisa
-    void*mtx=shmat(shmid,NULL,0);
+    void*mtx=shmat(shmid,NULL,0);       /*  shmat() attaches the System V shared memory segment identified by shmid
+                                            to the address space of the calling process.  The attaching address  is
+                                            specified by shmaddr[reference : man]   
+                                        */
     if(mtx==(void*)-1){
         handle_error_with_exit("errror in attach_shm\n");
     }
     return mtx;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 char* generate_full_pathname(char* filename, char* dir){//funzione che crea il path assoluto di un file sapendo che sta nella directory dir
 //ricordarsi di fare la free di path nella funzione chiamante

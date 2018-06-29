@@ -20,7 +20,7 @@ void timeout_handler_serv(int sig, siginfo_t *si, void *uc){//gestione del segna
     (void)uc;
     great_alarm_serv=1;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void initialize_mtx_prefork(struct mtx_prefork*mtx_prefork){//inizializza memoria condivisa contentente semaforo
     //impostando numero di processi liberi a 0
     if(mtx_prefork==NULL){
@@ -32,6 +32,7 @@ void initialize_mtx_prefork(struct mtx_prefork*mtx_prefork){//inizializza memori
     mtx_prefork->free_process=0;
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//prendi dalla coda il messaggio di syn
     struct sockaddr_in serv_addr;
@@ -166,23 +167,24 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//pr
     return;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void child_job() {//lavoro che svolge il processo.
     //for(;;){
-    //prende la richiesta dalla coda;
-    // risponde al client;
-    // soddisfala richiesta;
+        //prende la richiesta dalla coda;
+        //risponde al client;
+        //soddisfala richiesta;
     //}
     struct msgbuf request;//contiene indirizzo del client da servire
     int value;
-    char done_jobs=0;
-    struct sigaction sa_timeout;
-    struct mtx_prefork*mtx_prefork=(struct mtx_prefork*)attach_shm(mtx_prefork_id);//ottieni puntatore
-    // alla regione di memoria condivisa dei processi
+    char done_jobs=0;//contatore richieste eseguite. Se > MAX_PROC_JOB uccido 
+    struct sigaction sa_timeout;//gestione timeout
+    struct mtx_prefork*mtx_prefork=(struct mtx_prefork*)attach_shm(mtx_prefork_id);//ottieni puntatore alla regione di memoria condivisa dei processi
+                                                                                    
     memset(&sa_timeout,0,sizeof(struct sigaction));
     unlock_signal(SIGALRM);
+
     sem_t*mtx_file=(sem_t*)attach_shm(mtx_file_id);
-    sem_t *mtx_queue_child=(sem_t*)attach_shm(queue_mtx_id);//ottieni puntatore
-    // alla regione di memoria condivisa dei processi
+    sem_t *mtx_queue_child=(sem_t*)attach_shm(queue_mtx_id);//ottieni puntatore alla regione di memoria condivisa dei processi
     if(close(main_sockfd)==-1){//chiudi il socket del padre
         handle_error_with_exit("error in close socket fd\n");
     }
@@ -223,6 +225,7 @@ void child_job() {//lavoro che svolge il processo.
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void create_pool(int num_child){//crea il pool di processi.
 // Ogni processo ha il compito di gestire le richieste
     int pid;
@@ -233,16 +236,23 @@ void create_pool(int num_child){//crea il pool di processi.
         if ((pid = fork()) == -1) {
             handle_error_with_exit("error in fork\n");
         }
-        if (pid == 0) {
+        if (pid == 0) {//sono il figlio
             child_job();//i figli non ritorna mai
         }
     }
     return;//il padre ritorna dopo aver creato i processi
 }
-void*pool_handler_job(void*arg){//thread che gestisce il pool dei processi del client
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+void*pool_handler_job(void*arg){//thread che gestisce il pool dei processi del server
     struct mtx_prefork*mtx_prefork=arg;
     int left_process;
     block_signal(SIGALRM);
+    /*Ciclicamente controllo : 
+        -numero processi liberi,se sono sotto una soglia 
+            -Prendo il lock sul semaforo
+            -Creo il numero di processi
+    */
+
     for(;;){
         lock_sem(&(mtx_prefork->sem));
         if(mtx_prefork->free_process<NUM_FREE_PROCESS){
@@ -257,6 +267,7 @@ void*pool_handler_job(void*arg){//thread che gestisce il pool dei processi del c
     }
     return NULL;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void create_thread_pool_handler(struct mtx_prefork*mtx_prefork){
 //crea il gestore(thread) della riserva di processi
@@ -271,6 +282,9 @@ void create_thread_pool_handler(struct mtx_prefork*mtx_prefork){
     return;
 }
 
+
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int main(int argc,char*argv[]) {//funzione principale processo server
     int fd,readed;
     socklen_t len;
@@ -281,9 +295,11 @@ int main(int argc,char*argv[]) {//funzione principale processo server
     struct mtx_prefork*mtx_prefork;//mutex tra processi e thread pool handler
     sem_t*mtx_queue;//semaforo tra i processi che provano ad accedere alla coda di messaggi
     sem_t*mtx_file;
+
     if(argc!=2){
         handle_error_with_exit("usage <directory>\n");
     }
+
     srand((unsigned int)time(NULL));
     check_if_dir_exist(argv[1]);//verifica che directory passata come parametro esiste
     dir_server=add_slash_to_dir(argv[1]);
@@ -293,30 +309,39 @@ int main(int argc,char*argv[]) {//funzione principale processo server
     if(fd==-1){
         handle_error_with_exit("parameter.txt in ./ not found\n");
     }
+
     line=malloc(sizeof(char)*MAXLINE);
     if(line==NULL){
         handle_error_with_exit("error in malloc\n");
     }
+
     command=line;
     memset(line,'\0',MAXLINE);
     readed=readline(fd,line,MAXLINE);//leggi parametri di esecuzione dal file parameter
+    
     if(count_word_in_buf(line)!=3){
-        handle_error_with_exit("parameter.txt must contains 3 parameters <window><loss_prob><timer>\n");
+        handle_error_with_exit("parameter.txt must contains 3 parameters <window> space <loss_prob> space <timer>\n");
     }
-    if(readed<=0){
+    if(readed<=0){//ho letto ma e' tornato errore
         handle_error_with_exit("error in read line\n");
     }
-    //inizializza parametri di esecuzione
-    param_serv.window=parse_integer_and_move(&line);
+
+    //Il primo valore che leggo e' la grandezza della dim della finestra
+    param_serv.window=parse_integer_and_move(&line);//inizializza parametri di esecuzione
+
     if(param_serv.window<1){
         handle_error_with_exit("window must be greater than 0\n");
     }
     skip_space(&line);
+
+    //prendo la prob di perdita 
     param_serv.loss_prob=parse_double_and_move(&line);
     if(param_serv.loss_prob<0 || param_serv.loss_prob>100){
         handle_error_with_exit("invalid loss prob\n");
     }
     skip_space(&line);
+
+    //Prendo il time out(sia adattivo che fissato)
     param_serv.timer_ms=parse_integer_and_move(&line);
     if(param_serv.timer_ms<0){
         handle_error_with_exit("timer must be positive or 0\n");
@@ -328,12 +353,12 @@ int main(int argc,char*argv[]) {//funzione principale processo server
     line=NULL;
 
     //inizializza memorie condivise contenenti semafori e inizializza coda
-    mtx_prefork_id=get_id_shared_mem(sizeof(struct mtx_prefork));
+    mtx_prefork_id=get_id_shared_mem(sizeof(struct mtx_prefork));//la struct mtx_prefork viene usata per tenere traccia dei processi liberi
     queue_mtx_id=get_id_shared_mem(sizeof(sem_t));
     msgid=get_id_msg_queue();//crea coda di messaggi id globale
     mtx_file_id=get_id_shared_mem(sizeof(sem_t));
 
-    mtx_file=(sem_t*)attach_shm(mtx_file_id);
+    mtx_file=(sem_t*)attach_shm(mtx_file_id);//Ritorna puntatore alla shared memory indicata dall'id passato alla funzione
     mtx_queue=(sem_t*)attach_shm(queue_mtx_id);//mutex per accedere alla coda
     mtx_prefork=(struct mtx_prefork*)attach_shm(mtx_prefork_id);//mutex tra processi e pool handler
     initialize_sem(mtx_queue);//inizializza memoria condivisa
@@ -352,9 +377,13 @@ int main(int argc,char*argv[]) {//funzione principale processo server
         handle_error_with_exit("error in bind\n");
     }
 
-    create_pool(NUM_FREE_PROCESS);//crea il pool di NUM_FREE_PROCESS processi
+    create_pool(NUM_FREE_PROCESS);//crea il pool di NUM_FREE_PROCESS(definito in basic.h) processi
+
+    //Da qui continua solo il processo padre-->i figli non ritornano dalla child_job()
     create_thread_pool_handler(mtx_prefork);//crea il thread che gestisce la riserva di processi
     printf(GREEN"Bootstrap completed\n"RESET);
+
+    //Ciclicamente vedo se arrivano msg dal client e li metto in coda
     while(1) {
         len=sizeof(cliaddr);
         if ((recvfrom(main_sockfd, commandBuffer, MAXCOMMANDLINE, 0, (struct sockaddr *) &cliaddr, &len)) < 0) {
@@ -368,3 +397,5 @@ int main(int argc,char*argv[]) {//funzione principale processo server
     }
     return EXIT_SUCCESS;
 }
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
