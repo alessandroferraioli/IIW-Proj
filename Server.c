@@ -13,7 +13,7 @@ int main_sockfd,msgid,queue_mtx_id,mtx_prefork_id,mtx_file_id,great_alarm_serv=0
 // sanno quali sono gli id
 struct select_param param_serv;
 char*dir_server;
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void timeout_handler_serv(int sig, siginfo_t *si, void *uc){//gestione del segnale alarm
     (void)sig;
     (void)si;
@@ -43,6 +43,7 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
     if(shm==NULL){
         handle_error_with_exit("error in malloc\n");
     }
+
     //Inizializzo la struttura per la gestione del sel_repeat
     initialize_mtx(&(shm->mtx));
     initialize_cond(&(shm->list_not_empty));
@@ -62,6 +63,7 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
     shm->seq_to_send=0;
     shm->addr.len=sizeof(request.addr);
     shm->param.window=param_serv.window;//primo pacchetto della finestra->primo non riscontrato
+    
     if(param_serv.timer_ms !=0 ) {
         shm->param.timer_ms = param_serv.timer_ms;
         shm->adaptive = 0;
@@ -72,10 +74,13 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
         shm->dev_RTT_ms=0;
         shm->est_RTT_ms=TIMER_BASE_ADAPTIVE;
     }
+
     shm->param.loss_prob=param_serv.loss_prob;
     shm->head=NULL;
     shm->tail=NULL;
     shm->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*(param_serv.window)));
+
+
     if(shm->win_buf_rcv==NULL){
         handle_error_with_exit("error in malloc win buf rcv\n");
     }
@@ -85,37 +90,47 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
     }
     memset(shm->win_buf_rcv,0,sizeof(struct window_rcv_buf)*(2*(param_serv.window)));//inizializza a zero
     memset(shm->win_buf_snd,0,sizeof(struct window_snd_buf)*(2*(param_serv.window)));//inizializza a zero
-    for (int i = 0; i < 2 *(param_serv.window); i++) {
+
+    for (int i = 0; i < 2 *(param_serv.window); i++) {//alloco memoria su ogni buf della finestra 
+        
         shm->win_buf_snd[i].payload =malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
         if(shm->win_buf_snd[i].payload==NULL){
             handle_error_with_exit("error in malloc\n");
         }
-        memset(shm->win_buf_snd[i].payload,'\0',MAXPKTSIZE-OVERHEAD+1);
+        
+        memset(shm->win_buf_snd[i].payload,'\0',MAXPKTSIZE-OVERHEAD+1);//setto a zero
         shm->win_buf_rcv[i].payload=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
         if(shm->win_buf_rcv[i].payload==NULL){
             handle_error_with_exit("error in malloc\n");
         }
+        
         memset(shm->win_buf_rcv[i].payload,'\0',MAXPKTSIZE-OVERHEAD+1);
         shm->win_buf_snd[i].lap = -1;
-        shm->win_buf_snd[i].acked=2;
+        shm->win_buf_snd[i].acked=2;//li metto a 2-->sono pkt vuoti
         shm->win_buf_rcv[i].lap = -1;
     }
-    memset((void *)&serv_addr, 0, sizeof(serv_addr));//inizializzo socket del processo ad ogni nuova richiesta
+
+
+    memset((void *)&serv_addr, 0, sizeof(serv_addr));//inizializzo socket del processo ad ogni nuova richiesta-->riduco la prob di avere problemi di socket(le assegna il SO)
     serv_addr.sin_family=AF_INET;
     serv_addr.sin_port=htons(0);
     serv_addr.sin_addr.s_addr=htonl(INADDR_ANY);
+
     if ((shm->addr.sockfd= socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         handle_error_with_exit("error in socket create\n");
     }
     if (bind(shm->addr.sockfd, (struct sockaddr *)&(serv_addr), sizeof(serv_addr)) < 0) {//bind con una porta scelta automataticam. dal SO
         handle_error_with_exit("error in bind\n");
     }
+
     //manda syn ack dopo aver ricevuto il syn e aspetta il comando del client
     send_syn_ack(shm->addr.sockfd, &request.addr, sizeof(request.addr),param_serv.loss_prob ); //ultimo parametro è param_serv.loss_prob!!!!
-    alarm(TIMEOUT);
+    alarm(TIMEOUT);//La funzione alarm() invia al processo corrente il segnale SIGALRM dopo che siano trascorsi seconds secondi.
+    
     if(recvfrom(shm->addr.sockfd,&temp_buff,MAXPKTSIZE,0,(struct sockaddr *)&(shm->addr.dest_addr),&(shm->addr.len))!=-1){//ricevi il comando del client in finestra
         //bloccati finquando non ricevi il comando dal client
-        alarm(0);
+        alarm(0);//ricevuto il cmd-->metto a 0 il timeout non mi serve piu
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         print_rcv_message(temp_buff);
         printf(GREEN"connection established\n"RESET);
         great_alarm_serv=0;
@@ -149,11 +164,13 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
     else if(errno!=EINTR && errno!=0){
         handle_error_with_exit("error in send_syn_ack recvfrom\n");
     }
+
     if(great_alarm_serv==1){
         great_alarm_serv=0;
         printf(RED"Client not available\n"RESET);
         return ;
     }
+
     //libera la memoria della shared memory a fine lavoro
     for (int i = 0; i < 2 *(param_serv.window); i++) {
         free(shm->win_buf_snd[i].payload);
@@ -161,6 +178,8 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
         free(shm->win_buf_rcv[i].payload);
         shm->win_buf_rcv[i].payload=NULL;
     }
+
+
     free(shm->win_buf_rcv);
     free(shm->win_buf_snd);
     shm->win_buf_snd=NULL;
@@ -188,6 +207,7 @@ void child_job() {//lavoro che svolge il processo.
 
     sem_t*mtx_file=(sem_t*)attach_shm(mtx_file_id);
     sem_t *mtx_queue_child=(sem_t*)attach_shm(queue_mtx_id);//ottieni puntatore alla regione di memoria condivisa della coda 
+    
     if(close(main_sockfd)==-1){//chiudi il socket del padre
         handle_error_with_exit("error in close socket fd\n");
     }
@@ -209,7 +229,7 @@ void child_job() {//lavoro che svolge il processo.
         mtx_prefork->free_process+=1;
         unlock_sem(&(mtx_prefork->sem));
         lock_sem(mtx_queue_child);
-        value=(int)msgrcv(msgid,&request,sizeof(struct msgbuf)-sizeof(long),0,0);//Dopo aver preso il lock sulal coda, leggo dalla coda 
+        value=(int)msgrcv(msgid,&request,sizeof(struct msgbuf)-sizeof(long),0,0);//Dopo aver preso il lock sulal coda, leggo dalla coda (metto il msg letto in request)
         unlock_sem(mtx_queue_child);//non è un problema prendere il mutex e bloccarsi in coda
         if(value==-1){//errore msgrcv
             lock_sem(&(mtx_prefork->sem));
