@@ -34,13 +34,16 @@ void initialize_mtx_prefork(struct mtx_prefork*mtx_prefork){//inizializza memori
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//prendi dalla coda il messaggio di syn
+void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg dalla coda di richieste e soddisfo il cmd
+    
     struct sockaddr_in serv_addr;
     struct temp_buffer temp_buff;//pacchetto da inviare
+   
     struct shm_sel_repeat *shm=malloc(sizeof(struct shm_sel_repeat));
     if(shm==NULL){
         handle_error_with_exit("error in malloc\n");
     }
+    //Inizializzo la struttura per la gestione del sel_repeat
     initialize_mtx(&(shm->mtx));
     initialize_cond(&(shm->list_not_empty));
     shm->fd=-1;
@@ -184,7 +187,7 @@ void child_job() {//lavoro che svolge il processo.
     unlock_signal(SIGALRM);
 
     sem_t*mtx_file=(sem_t*)attach_shm(mtx_file_id);
-    sem_t *mtx_queue_child=(sem_t*)attach_shm(queue_mtx_id);//ottieni puntatore alla regione di memoria condivisa dei processi
+    sem_t *mtx_queue_child=(sem_t*)attach_shm(queue_mtx_id);//ottieni puntatore alla regione di memoria condivisa della coda 
     if(close(main_sockfd)==-1){//chiudi il socket del padre
         handle_error_with_exit("error in close socket fd\n");
     }
@@ -206,7 +209,7 @@ void child_job() {//lavoro che svolge il processo.
         mtx_prefork->free_process+=1;
         unlock_sem(&(mtx_prefork->sem));
         lock_sem(mtx_queue_child);
-        value=(int)msgrcv(msgid,&request,sizeof(struct msgbuf)-sizeof(long),0,0);
+        value=(int)msgrcv(msgid,&request,sizeof(struct msgbuf)-sizeof(long),0,0);//Dopo aver preso il lock sulal coda, leggo dalla coda 
         unlock_sem(mtx_queue_child);//non è un problema prendere il mutex e bloccarsi in coda
         if(value==-1){//errore msgrcv
             lock_sem(&(mtx_prefork->sem));
@@ -214,10 +217,13 @@ void child_job() {//lavoro che svolge il processo.
             unlock_sem(&(mtx_prefork->sem));
             handle_error_with_exit("errore in msgrcv\n");
         }
-        lock_sem(&(mtx_prefork->sem));
+
+        lock_sem(&(mtx_prefork->sem));//Prendo il lock sulla struttura del prefork e decremento il numero di processi liberi-->il processo figlio soddisfa la richiesta del client
         mtx_prefork->free_process-=1;
         unlock_sem(&(mtx_prefork->sem));
+
         reply_to_syn_and_execute_command(request,mtx_file);//soddisfa la richiesta
+      
         done_jobs++;//incrementa numero di lavori svolti
         if(done_jobs>MAX_PROC_JOB){
             exit(EXIT_SUCCESS);
