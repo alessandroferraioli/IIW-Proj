@@ -47,7 +47,7 @@ struct node* get_new_node(int seq,int lap,struct timespec timespec,int timer_ms)
     new_node->next = NULL;
     return new_node;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int delete_head(struct node** head, struct node* old_head){
     //initializza oldhead con il primo nodo della lista e distrugge il primo nodo della lista
     if(head==NULL){
@@ -76,7 +76,7 @@ int delete_head(struct node** head, struct node* old_head){
     }
     return 0;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void insert_at_head(struct node* new_node,struct node** head,struct node** tail) {//inserisce un nodo in testa alla lista
     if(head==NULL){
         handle_error_with_exit("error in insert_at_head **head is NULL\n");
@@ -113,7 +113,7 @@ char first_is_smaller(struct node node1, struct node node2){//verifica se il pri
         return 1;
     }
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void insert_ordered(int seq,int lap,struct timespec timespec,int timer_ms, struct node** head, struct node** tail){
     //inserisce ordinatamente un nodo nella lista ordinata per istanti temporali
     struct node* temp = *tail;
@@ -137,6 +137,7 @@ void insert_ordered(int seq,int lap,struct timespec timespec,int timer_ms, struc
                 return;
             }
         }
+        //Riempio i campi del nodo(vedi basic.h)
         next_node = temp->next;
         new_node->prev = temp;
         new_node->next = next_node;
@@ -145,7 +146,7 @@ void insert_ordered(int seq,int lap,struct timespec timespec,int timer_ms, struc
     }
     return;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 

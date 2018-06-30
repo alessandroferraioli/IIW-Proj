@@ -59,7 +59,7 @@ void wait_for_fin_put(struct shm_sel_repeat *shm) {
         }
     }
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void rcv_put_file(struct shm_sel_repeat *shm) {
     //dopo aver ricevuto messaggio di put manda messaggio di start e si mette in ricezione dello start
     struct temp_buffer temp_buff;
@@ -73,7 +73,7 @@ void rcv_put_file(struct shm_sel_repeat *shm) {
     while (1) {
         if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &shm->addr.dest_addr,
                      &shm->addr.len) != -1) {
-            //bloccante o non bloccante??
+           
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
                 continue;//ignora pacchetto
@@ -132,14 +132,14 @@ void rcv_put_file(struct shm_sel_repeat *shm) {
         }
     }
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //thread trasmettitore e ricevitore
 void *put_server_job(void *arg) {
     struct shm_sel_repeat *shm = arg;
     rcv_put_file(shm);
     return NULL;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void put_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
     //trasmettitore,ricevitore;
     //ritrasmettitore
@@ -162,7 +162,7 @@ void put_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
     unlock_signal(SIGALRM);
     return;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //ricevuto pacchetto con put dimensione e filename
 void execute_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     //verifica prima che il file esiste(con filename dentro temp_buffer)
@@ -211,3 +211,4 @@ void execute_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

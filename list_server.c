@@ -14,14 +14,16 @@ void close_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     pthread_cancel(shm->tid);
     pthread_exit(NULL);
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //messaggio start ricevuto,thread pronto alla trasmissione
 void send_list( struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
     char *temp_list;//creare la lista e poi inviarla in parti
 
     temp_list = shm->list;
-    alarm(TIMEOUT);
+    alarm(TIMEOUT);//setto il timeout
     while (1) {
-        if (((shm->pkt_fly) < (shm->param.window)) && ((shm->byte_sent) < (shm->dimension))) {
+        if (((shm->pkt_fly) < (shm->param.window)) && ((shm->byte_sent) < (shm->dimension))) {  //se non sto eccedendo per numero di pkt in viaggio in base alla dim
+                                                                                                //della mia finestra e non ho riempito la dimensione byte invio in lista
             send_list_in_window(temp_buff, shm);
         }
         while(recvfrom(shm->addr.sockfd, &temp_buff,MAXPKTSIZE, MSG_DONTWAIT,
@@ -77,6 +79,7 @@ void send_list( struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
         }
     }
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto messaggio list manda la dimensione della lista e aspetta start
 void wait_for_start_list(struct shm_sel_repeat *shm, struct temp_buffer temp_buff) {
     char dim[15];
@@ -144,7 +147,7 @@ void wait_for_start_list(struct shm_sel_repeat *shm, struct temp_buffer temp_buf
         }
     }
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //thread trasmettitore e ricevitore
 void *list_server_job(void *arg) {
     struct shm_sel_repeat *shm= arg;
@@ -152,11 +155,11 @@ void *list_server_job(void *arg) {
     wait_for_start_list(shm, temp_buff);
     return NULL;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void list_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
-    //trasmettitore,ricevitore;
-    //ritrasmettitore
-    pthread_t tid_snd,tid_rtx;
+   
+    pthread_t tid_snd,tid_rtx; //trasmettitore e ricevitore  +  ritrasmettitore
     if(pthread_create(&tid_rtx,NULL,rtx_job,shm)!=0){
         handle_error_with_exit("error in create thread list_server_rtx\n");
     }
@@ -164,8 +167,10 @@ void list_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
     if(pthread_create(&tid_snd,NULL,list_server_job,shm)!=0){
         handle_error_with_exit("error in create thread list_server\n");
     }
-    block_signal(SIGALRM);//il thread principale non viene interrotto dal segnale di timeout
-    //il thread principale aspetta che i 2 thread finiscano i compiti
+    block_signal(SIGALRM);//il thread principale non viene interrotto dal segnale di timeout[vale solo per il thread che la chiama la block]
+                          //il thread principale aspetta che i 2 thread finiscano i compiti
+    
+    //attendo che finiscano
     if(pthread_join(tid_snd,NULL)!=0){
         handle_error_with_exit("error in pthread_join\n");
     }
@@ -175,7 +180,7 @@ void list_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
     unlock_signal(SIGALRM);
     return;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void execute_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     //verifica che il file (con filename scritto dentro temp_buffer esiste)
     // ,manda la dimensione, aspetta lo start e inizia a mandare il file,

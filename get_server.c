@@ -73,6 +73,7 @@ void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
         }
     }
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto il comando get manda dimensione del file e aspetta start
 void wait_for_start_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
     char *path, dim_string[15];
@@ -117,8 +118,8 @@ void wait_for_start_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm
     alarm(TIMEOUT);
     while (1) {
         if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *)
-                &shm->addr.dest_addr, &shm->addr.len) != -1) {//attendo risposta del client,
-            // aspetto finquando non arriva la risposta o scade il timeout
+                &shm->addr.dest_addr, &shm->addr.len) != -1) {  //attendo risposta del client,
+                                                                //aspetto finquando non arriva la risposta o scade il timeout
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
                 continue;//ignora pacchetto
@@ -166,6 +167,7 @@ void wait_for_start_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm
         }
     }
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //thread trasmettitore e ricevitore
 void *get_server_job(void *arg) {
     struct shm_sel_repeat *shm = arg;
@@ -174,7 +176,7 @@ void *get_server_job(void *arg) {
     return NULL;
 }
 
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void get_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
     //trasmettitore,ricevitore;
     //ritrasmettitore
@@ -197,9 +199,14 @@ void get_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
     unlock_signal(SIGALRM);
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //ricevuto messaggio get filename
 void execute_get(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
-    //verifica prima che il file con nome dentro temp_buffer esiste ,manda la dimensione, aspetta lo start e inizia a mandare il file,temp_buff contiene il pacchetto con comando get
+    //verifica prima che il file con nome dentro temp_buffer esiste
+    //manda la dimensione
+    //aspetta lo start e inizia a mandare il file
+    //temp_buff contiene il pacchetto con comando get
+    
     shm->filename = malloc(sizeof(char) * (MAXPKTSIZE - OVERHEAD));
     if (shm->filename == NULL) {
         handle_error_with_exit("error in malloc\n");
@@ -214,3 +221,4 @@ void execute_get(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

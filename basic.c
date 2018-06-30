@@ -1,6 +1,6 @@
 #include "basic.h"
 #include "timer.h"
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 char calc_file_MD5(char *filename, char *md5_sum, long dimension){//calcola md5 di un file
     if(filename==NULL || md5_sum==NULL){
         handle_error_with_exit("error in calc md5\n");
@@ -24,6 +24,8 @@ char calc_file_MD5(char *filename, char *md5_sum, long dimension){//calcola md5 
     pclose(p);
     return i == MD5_LEN;
 }
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void check_md5(char*filename,char*md5_to_check, long dimension) {//verifica che 2 md5 sono uguali
     if (dimension >=MAX_MD5_SIZE){
         printf(YELLOW "File %s received,md5 not available due to file size\n"RESET, filename);
@@ -133,7 +135,7 @@ void set_max_buff_rcv_size(int sockfd){//imposta il buffer ricezione della socke
     }
     return;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 char to_resend(struct shm_sel_repeat *shm, struct node node){//verifica se un pacchetto è da ritrasmettere
     if(shm==NULL){
         handle_error_with_exit("error in to_resend shm is NULL\n");
@@ -148,6 +150,7 @@ char to_resend(struct shm_sel_repeat *shm, struct node node){//verifica se un pa
         return 0;
     }
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 key_t get_key(char c){
     key_t key;
     key=ftok(".",c);
@@ -231,7 +234,7 @@ void initialize_cond(pthread_cond_t*cond){//inizializza variabile condizione
         handle_error_with_exit("error in initialize cond\n");
     }
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void wait_on_a_condition(pthread_cond_t*cond,pthread_mutex_t *mtx){//il thread chiamante aspetta che la condizione diventi vera
     if(mtx==NULL){
         handle_error_with_exit("error in wait condition mtx is NULL\n");
@@ -244,6 +247,7 @@ void wait_on_a_condition(pthread_cond_t*cond,pthread_mutex_t *mtx){//il thread c
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void unlock_thread_on_a_condition(pthread_cond_t*cond){//sblocca un thread bloccato sulla condizione specificata
     if(cond==NULL){
         handle_error_with_exit("error in unlock_thread cond is NULL\n");
@@ -293,7 +297,7 @@ void copy_buf2_in_buf1(char*buf1,char*buf2,long dim){//copia dim byte da buf 2 a
     }
     return;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int count_word_in_buf(char*buf){//conta le parole dentro una stringa
     if(buf==NULL){
         handle_error_with_exit("error in count_word buf is NULL\n");
@@ -335,7 +339,7 @@ void generate_underscore_and_number(char*temp,unsigned int copy_number){//fa div
     better_strcat(temp,num_format_string);
     return;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 char* generate_multi_copy(char*path_to_filename,char*filename){//ritorna path assoluti tutti diversi tra loro partendo da un file che esiste,o ritorna null se ci sono troppe copie del file(255)
 // fare la free di absolut path nella funzione chiamante dopo aver creato il file
     unsigned int copy_number=1;
@@ -403,7 +407,7 @@ char* generate_multi_copy(char*path_to_filename,char*filename){//ritorna path as
     free(first_of_the_dot);
     return absolute_path;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 char seq_is_in_window(int win_base,int window,int seq){
     //verifica che se un numero di sequenza è dentro la finestra:1 si; 0 no
     if(win_base<0 || window<1 || seq<0){
@@ -427,7 +431,7 @@ char seq_is_in_window(int win_base,int window,int seq){
     }
 
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 char flip_coin(double loss_prob){//genera un numero casuale tra 0 e 100 e ritorna vero se devo trasmettere,falso altrimenti
     if(loss_prob<0 || loss_prob>100){
         handle_error_with_exit("error in flip_coin invalid loss_prob\n");
@@ -438,7 +442,7 @@ char flip_coin(double loss_prob){//genera un numero casuale tra 0 e 100 e ritorn
     }
     return 1;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int count_char_dir(char*path){
     if(path==NULL){
         handle_error_with_exit("error in count_char_dir path is NULL\n");
@@ -467,6 +471,7 @@ int count_char_dir(char*path){
     return lenght;
 
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 char* files_in_dir(char* path,long lenght) {
     //funzione che, dato un path, crea una stringa (file1\nfile2\nfile3\n...) contenente il nome di tutti file in quella directory
     //fare la free nel chiamante del char* ritornato
@@ -499,6 +504,7 @@ char* files_in_dir(char* path,long lenght) {
     }
     return (list);
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 char*make_list(char*path){//ritorna la lista di file presenti in path
     char*list;
     int lenght;
@@ -509,6 +515,7 @@ char*make_list(char*path){//ritorna la lista di file presenti in path
     list=files_in_dir(path,lenght);
     return list;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 char check_if_file_exist(char*path){//verifica che il file esiste in memoria
     if(path==NULL){
         handle_error_with_exit("error in check_if_file_exist\n");
@@ -518,7 +525,7 @@ char check_if_file_exist(char*path){//verifica che il file esiste in memoria
     }
     return 0;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 long get_file_size(char*path){//ritorna la dimensione di un file dato un path
     if(path==NULL){
         handle_error_with_exit("error in get_file_size\n");

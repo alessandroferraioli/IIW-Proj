@@ -130,11 +130,11 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
     if(recvfrom(shm->addr.sockfd,&temp_buff,MAXPKTSIZE,0,(struct sockaddr *)&(shm->addr.dest_addr),&(shm->addr.len))!=-1){//ricevi il comando del client in finestra
         //bloccati finquando non ricevi il comando dal client
         alarm(0);//ricevuto il cmd-->metto a 0 il timeout non mi serve piu
-        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         print_rcv_message(temp_buff);
         printf(GREEN"connection established\n"RESET);
-        great_alarm_serv=0;
+        great_alarm_serv=0;//Lo disattivo ( attivato ad 1 nell handler del timeout)
         //in base al comando ricevuto il processo figlio server esegue uno dei 3 comandi
+       
         if(temp_buff.command==LIST){
             execute_list(temp_buff,shm);
         }

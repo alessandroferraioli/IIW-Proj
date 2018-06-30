@@ -5,7 +5,7 @@
 #include "Server.h"
 #include "dynamic_list.h"
 
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 long  calculate_time_left(struct node node){//ritorna il numero di millisecondi(tv-getttimeofday)
     struct timespec time_current;
     long time_ns_cur;
@@ -20,7 +20,7 @@ long  calculate_time_left(struct node node){//ritorna il numero di millisecondi(
     time_ns_left= time_ns_timespec-time_ns_cur;
     return time_ns_left;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void sleep_struct(struct timespec* sleep_time, long timer_ns_left){//scrive i timer_ns_left nanosecondi dentro la struct timespec
     if(timer_ns_left<0){
         handle_error_with_exit("error in sleep struct\n");
@@ -32,7 +32,7 @@ void sleep_struct(struct timespec* sleep_time, long timer_ns_left){//scrive i ti
     sleep_time->tv_sec = (timer_ns_left - (sleep_time->tv_nsec))/1000000000;
     return;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int calculate_sample_RTT(struct timespec tx_time){//calcola il sample_rtt
 // sample==istante di tempo attuale-istante di tempo in cui è stato mandato il pacchetto
     if ((tx_time.tv_sec == 0) && (tx_time.tv_nsec == 0)){
