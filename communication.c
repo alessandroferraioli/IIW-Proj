@@ -422,7 +422,7 @@ void rcv_msg_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repe
 
     ack_buff.ack = temp_buff.seq;
     ack_buff.seq = NOT_A_PKT;
-    better_strcpy(ack_buff.payload, "ACK")//metto l ack nel buff 
+    better_strcpy(ack_buff.payload, "ACK");//metto l ack nel buff 
     ack_buff.command = temp_buff.command;
     ack_buff.lap = temp_buff.lap;
 
