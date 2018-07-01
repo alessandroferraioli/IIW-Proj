@@ -84,25 +84,32 @@ void send_list( struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
 void wait_for_start_list(struct shm_sel_repeat *shm, struct temp_buffer temp_buff) {
     char dim[15];
     lock_sem(shm->mtx_file);
+
+    //Calcolo dimensione file list 
     shm->dimension = count_char_dir(dir_server);
     if (shm->dimension != 0) {
         shm->list = files_in_dir(dir_server, shm->dimension);
         unlock_sem(shm->mtx_file);
         sprintf(dim, "%ld", shm->dimension);
+        //Invio la dimensione 
         send_message_in_window(temp_buff,shm , DIMENSION,dim);
+    
     } else {
         unlock_sem(shm->mtx_file);
         send_message_in_window(temp_buff ,shm, ERROR,"la lista è vuota");
     }
+
+    //attendo ack dim -->rimetto un timeout
     errno = 0;
     alarm(TIMEOUT);
     while (1) {
         if (recvfrom(shm->addr.sockfd, &temp_buff,MAXPKTSIZE, 0,
                      (struct sockaddr *) &shm->addr.dest_addr, &shm->addr.len) !=
-            -1) {//attendo risposta del client,
-            // aspetto finquando non arriva la risposta o scade il timeout
+            -1) {   //attendo risposta del client,
+                    //aspetto finquando non arriva la risposta o scade il timeout
+           
             print_rcv_message(temp_buff);
-            if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
+            if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {//Voglio un dim ack
                 continue;//ignora pacchetto
             } else {
                 alarm(0);
@@ -115,11 +122,13 @@ void wait_for_start_list(struct shm_sel_repeat *shm, struct temp_buffer temp_buf
                 printf(GREEN"Empty list sent\n"RESET);
                 pthread_exit(NULL);
             }
-            else if (temp_buff.command == START) {//se ricevi start vai in send_list
+            else if (temp_buff.command == START) {//se ricevi start vai in send_list , é arrivato prima dell'ack 
                 rcv_msg_send_ack_in_window(temp_buff, shm);
                 send_list(temp_buff,shm);
                 return;
             }
+
+
             if (temp_buff.seq == NOT_A_PKT && temp_buff.ack != NOT_AN_ACK) {//se è un ack
                 if (seq_is_in_window(shm->window_base_snd, shm->param.window, temp_buff.ack)) {//se è in finestra
                     rcv_ack_in_window(temp_buff, shm);
@@ -128,7 +137,8 @@ void wait_for_start_list(struct shm_sel_repeat *shm, struct temp_buffer temp_buf
                 }
                 alarm(TIMEOUT);
             } else if (!seq_is_in_window(shm->window_base_rcv, shm->param.window, temp_buff.seq)) {
-                //se non è un ack e non è in finestra
+                
+                //se non è un ack e non è in finestra-->msg gia ricevuto, rimando l'ack
                 rcv_msg_re_send_ack_in_window(temp_buff, shm);
                 alarm(TIMEOUT);
             }  else {

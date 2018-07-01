@@ -55,7 +55,7 @@ int calculate_sample_RTT(struct timespec tx_time){//calcola il sample_rtt
     }
     return sample_RTT;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 double calculate_est_RTT(double est_RTT, double sample_RTT){//calcola l'estimated_rtt
     if(est_RTT<0 || sample_RTT<0){
         handle_error_with_exit("error in calculate est_RTT\n");
@@ -63,7 +63,7 @@ double calculate_est_RTT(double est_RTT, double sample_RTT){//calcola l'estimate
     est_RTT = est_RTT -(est_RTT/8) + (sample_RTT/8);
     return est_RTT;
 }
-//
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void adaptive_timer(struct shm_sel_repeat* shm, int seq){//dopo aver ricevuto l'ack calcola il nuovo tempo di ritrasmissione
     int sample;
     if(shm==NULL || seq<0 || seq>(shm->param.window*2-1)){
@@ -77,3 +77,4 @@ void adaptive_timer(struct shm_sel_repeat* shm, int seq){//dopo aver ricevuto l'
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

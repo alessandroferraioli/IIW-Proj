@@ -61,7 +61,7 @@ void wait_for_fin_put(struct shm_sel_repeat *shm) {
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void rcv_put_file(struct shm_sel_repeat *shm) {
-    //dopo aver ricevuto messaggio di put manda messaggio di start e si mette in ricezione dello start
+    //dopo aver ricevuto messaggio di put manda messaggio di start e si mette in ricezione del file 
     struct temp_buffer temp_buff;
     alarm(TIMEOUT);
     if (shm->fd != -1) {
@@ -75,7 +75,7 @@ void rcv_put_file(struct shm_sel_repeat *shm) {
                      &shm->addr.len) != -1) {
            
             print_rcv_message(temp_buff);
-            if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
+            if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {//attendo un start ack
                 continue;//ignora pacchetto
             } else {
                 alarm(0);
@@ -90,7 +90,7 @@ void rcv_put_file(struct shm_sel_repeat *shm) {
                 file_unlock(shm->fd);
                 pthread_exit(NULL);
             }
-            else if (temp_buff.seq == NOT_A_PKT && temp_buff.ack != NOT_AN_ACK) {//se è un ack
+            else if (temp_buff.seq == NOT_A_PKT && temp_buff.ack != NOT_AN_ACK) {//se è un ack [quello che attendevo ]
                 if (seq_is_in_window(shm->window_base_snd, shm->param.window, temp_buff.ack)) {//se è in finestra
                     if(temp_buff.command==DATA){
                         handle_error_with_exit("errore in ack rcv_put_file\n");
@@ -140,9 +140,9 @@ void *put_server_job(void *arg) {
     return NULL;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void put_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
-    //trasmettitore,ricevitore;
-    //ritrasmettitore
+void put_server(struct shm_sel_repeat *shm) {   //crea i 2 thread:
+                                                //trasmettitore,ricevitore;
+                                                //ritrasmettitore
     pthread_t tid_snd, tid_rtx;
     if (pthread_create(&tid_rtx, NULL, rtx_job, shm) != 0) {
         handle_error_with_exit("error in create thread put_server_rtx\n");
@@ -172,6 +172,7 @@ void execute_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     if (payload == NULL) {
         handle_error_with_exit("error in payload\n");
     }
+   
     //estrai dal pacchetto filename e dimensione
     better_strcpy(payload, temp_buff.payload);
     first = payload;
@@ -181,6 +182,8 @@ void execute_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     shm->md5_sent[MD5_LEN] = '\0';
     payload += MD5_LEN;
     payload++;
+    
+    //Prendo lock su file ed opero per studiarne l'esistenza e/o duplicato
     lock_sem(shm->mtx_file);
     path = generate_multi_copy(dir_server, payload);
     shm->filename = malloc(sizeof(char) * MAXFILENAME);

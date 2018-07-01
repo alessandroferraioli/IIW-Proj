@@ -22,6 +22,7 @@ void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
         if (shm->pkt_fly < shm->param.window && (shm->byte_sent) < shm->dimension) {
             send_data_in_window(temp_buff, shm);
         }
+
         while (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, MSG_DONTWAIT, (struct sockaddr *) &shm->addr.dest_addr,
                         &shm->addr.len) !=
                -1) {//non devo bloccarmi sulla ricezione,se ne trovo uno leggo finquando posso
@@ -41,7 +42,7 @@ void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
                             pthread_cancel(shm->tid);
                             pthread_exit(NULL);
                         }
-                    } else {
+                    } else {//non é in finestra 
                         rcv_ack_in_window(temp_buff, shm);
                         if (shm->byte_readed == shm->dimension) {
                             //se tutti i byte sono stati riscontrati vai in chiusura
@@ -54,7 +55,7 @@ void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
                     //ack duplicato
                 }
                 alarm(TIMEOUT);
-            } else if (!seq_is_in_window(shm->window_base_rcv, shm->param.window, temp_buff.seq)) {//non ack non in finestra
+            } else if (!seq_is_in_window(shm->window_base_rcv, shm->param.window, temp_buff.seq)) {//non ack non in finestra-->aggiungo in finestra nuovo ack
                 rcv_msg_re_send_ack_in_window(temp_buff, shm);
                 alarm(TIMEOUT);
             } else {
@@ -82,6 +83,7 @@ void wait_for_start_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm
     if (path == NULL) {
         handle_error_with_exit("error in generate full path\n");
     }
+
     //ottieni la dimensione del file da inviare e inseriscila insieme all'MD5 dentro il pacchetto da inviare al client
     if (check_if_file_exist(path)) {
         shm->dimension = get_file_size(path);

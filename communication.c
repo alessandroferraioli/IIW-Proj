@@ -164,11 +164,13 @@ void send_list_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm
     if (clock_gettime(CLOCK_MONOTONIC, &(shm->win_buf_snd[shm->seq_to_send].time)) != 0) {
         handle_error_with_exit("error in get_time\n");
     }
-    
+    //Inserisco in lista il pkt aggiunto alla finestra 
     insert_ordered(shm->seq_to_send, shm->win_buf_snd[shm->seq_to_send].lap, shm->win_buf_snd[shm->seq_to_send].time, shm->param.timer_ms,
                    &(shm->head), &(shm->tail));
+    //lista non piu vuota-->rilascio la condizione sul thread
     unlock_thread_on_a_condition(&(shm->list_not_empty));
 
+    //invio pkt
     if (flip_coin(shm->param.loss_prob)) {
         if (sendto(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->addr.dest_addr), shm->addr.len) ==
             -1) {
@@ -249,11 +251,14 @@ void send_message_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *
     temp_buff.ack = NOT_AN_ACK;
     temp_buff.seq = shm->seq_to_send;
     better_strcpy(temp_buff.payload, message);
+
+    //prendo il mtx sulla shared memory sel reapet-->ci lavoro indisturbato
     lock_mtx(&(shm->mtx));
 
     //copia in finestra il pacchetto cosi puoi ritrasmetterlo
     copy_buf2_in_buf1(shm->win_buf_snd[shm->seq_to_send].payload, temp_buff.payload, MAXPKTSIZE - OVERHEAD);
-   
+    
+    //segno come ancora non riscontrato
     shm->win_buf_snd[shm->seq_to_send].command = command;
     shm->win_buf_snd[shm->seq_to_send].acked = 0;
     
@@ -264,11 +269,13 @@ void send_message_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *
     (shm->win_buf_snd[shm->seq_to_send].lap) += 1;
     temp_buff.lap = shm->win_buf_snd[shm->seq_to_send].lap;
     
-    //inserisci le informazioni del pacchetto in una lista dinamica
+    //inserisci le informazioni del pacchetto in una lista dinamica ordinata in base al tempo 
     insert_ordered(shm->seq_to_send, shm->win_buf_snd[shm->seq_to_send].lap, shm->win_buf_snd[shm->seq_to_send].time, shm->param.timer_ms,
                    &(shm->head), &(shm->tail));
+    //rilascio la cond sul thread della lista non vuota 
     unlock_thread_on_a_condition(&(shm->list_not_empty));
 
+    //invio il pkt 
     if (flip_coin(shm->param.loss_prob)) {
         if (sendto(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &shm->addr.dest_addr,shm->addr.len) ==
             -1) {
@@ -278,9 +285,12 @@ void send_message_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *
     } else {
         print_msg_sent_and_lost(temp_buff);
     }
+
     //incrementa seq_to_send e pkt_fly
     shm->seq_to_send = ((shm->seq_to_send) + 1) % (2 *shm->param.window);
     (shm->pkt_fly)++;
+
+
     unlock_mtx(&(shm->mtx));
     return;
 }
@@ -382,7 +392,8 @@ void rcv_data_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_rep
         print_msg_sent_and_lost(ack_buff);
     }
     if (temp_buff.seq == shm->window_base_rcv) {//se pacchetto riempie un buco
-        // scorro la finestra fino al primo ancora non ricevuto
+
+        //scorro la finestra fino al primo ancora non ricevuto
         while (shm->win_buf_rcv[shm->window_base_rcv].received == 1) {
             if (shm->dimension - shm->byte_written >= (int)(MAXPKTSIZE - OVERHEAD)) {
                 written = (int) writen(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (MAXPKTSIZE - OVERHEAD));
@@ -409,7 +420,8 @@ void rcv_data_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_rep
 void rcv_msg_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     struct temp_buffer ack_buff;
     int written;
-    if (shm->win_buf_rcv[temp_buff.seq].received == 0) {
+
+    if (shm->win_buf_rcv[temp_buff.seq].received == 0) {//se il msg ricevuto non é stato ancora riscontrato
         if ((shm->win_buf_rcv[temp_buff.seq].lap) == (temp_buff.lap - 1)) {
             shm-> win_buf_rcv[temp_buff.seq].lap = temp_buff.lap;
             shm->win_buf_rcv[temp_buff.seq].command = temp_buff.command;
@@ -420,13 +432,14 @@ void rcv_msg_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repe
         }
     }
 
+    //riempio la struttura della coda condivisa
     ack_buff.ack = temp_buff.seq;
     ack_buff.seq = NOT_A_PKT;
-    better_strcpy(ack_buff.payload, "ACK");//metto l ack nel buff 
+    better_strcpy(ack_buff.payload, "ACK");//metto l'ack nel buff 
     ack_buff.command = temp_buff.command;
     ack_buff.lap = temp_buff.lap;
 
-    if (flip_coin(shm->param.loss_prob)) {//mando l ack sulal finestra 
+    if (flip_coin(shm->param.loss_prob)) {//mando l'ack sulla finestra 
         if (sendto(shm->addr.sockfd, &ack_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->addr.dest_addr), shm->addr.len) ==
             -1) {
             handle_error_with_exit("error in sendto\n");
@@ -436,7 +449,8 @@ void rcv_msg_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repe
         print_msg_sent_and_lost(ack_buff);
     }
     if (temp_buff.seq == shm->window_base_rcv) {//se pacchetto riempie un buco
-                                                // scorro la finestra fino al primo ancora non ricevuto
+        
+        // scorro la finestra fino al primo ancora non ricevuto
         while (shm->win_buf_rcv[shm->window_base_rcv].received == 1) {
             if (shm->win_buf_rcv[shm->window_base_rcv].command == DATA) {//DATA == 0 
                 if (shm->dimension - shm->byte_written >= (int)(MAXPKTSIZE - OVERHEAD)) {
@@ -463,9 +477,12 @@ void rcv_msg_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repe
 //ricevi ack,segna quel messaggio come riscontrato e verifica se puoi traslare la finestra
 // diminuendo cosi pkt_fly
 void rcv_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
-    lock_mtx(&(shm->mtx));
+    
+
+    lock_mtx(&(shm->mtx));//Come sempre prendo prima il lock sulla shm sel repeat
+
     if (temp_buff.lap == shm->win_buf_snd[temp_buff.ack].lap) {
-        if(shm->win_buf_snd[temp_buff.ack].acked==1){
+        if(shm->win_buf_snd[temp_buff.ack].acked==1){//Gia riscontrato
             unlock_mtx(&(shm->mtx));
             return;
         }
@@ -473,12 +490,15 @@ void rcv_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) 
             if (shm->adaptive) {
                 adaptive_timer(shm, temp_buff.ack);
             }
+
+            //Caso non riscontrato , e timer  non adattativo 
             shm-> win_buf_snd[temp_buff.ack].acked = 1;
             shm->win_buf_snd[temp_buff.ack].time.tv_nsec = 0;
             shm-> win_buf_snd[temp_buff.ack].time.tv_sec = 0;
+
             if (temp_buff.ack == shm->window_base_snd) {//ricevuto ack del primo pacchetto non riscontrato->avanzo finestra
-                while (shm->win_buf_snd[shm->window_base_snd].acked == 1) {//finquando ho pacchetti riscontrati
-                    //avanzo la finestra
+                while (shm->win_buf_snd[shm->window_base_snd].acked == 1) { //finquando ho pacchetti riscontrati
+                                                                            //avanzo la finestra
                     if (shm->win_buf_snd[shm->window_base_snd].command == DATA) {
                         if (shm->dimension - shm->byte_readed >= (int)(MAXPKTSIZE - OVERHEAD)) {
                             shm->byte_readed += (MAXPKTSIZE - OVERHEAD);
@@ -488,7 +508,7 @@ void rcv_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) 
                     }
                     shm->win_buf_snd[shm->window_base_snd].acked = 2;//resetta quando scorri finestra
                     shm->window_base_snd = ((shm->window_base_snd) + 1) % (2 * shm->param.window);//avanza la finestra
-                    (shm->pkt_fly)--;
+                    (shm->pkt_fly)--;//pkt acked 
                 }
             }
         }
@@ -542,6 +562,8 @@ void rcv_ack_file_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *
     return;
 }
 
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //ricevi ack di un pacchetto contentente parte di lista.
 // Segna quel messaggio come riscontrato e verifica se puoi traslare la finestra
 // diminuendo cosi pkt_fly

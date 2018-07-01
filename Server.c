@@ -78,16 +78,17 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
     shm->param.loss_prob=param_serv.loss_prob;
     shm->head=NULL;
     shm->tail=NULL;
+    
     shm->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*(param_serv.window)));
-
-
     if(shm->win_buf_rcv==NULL){
         handle_error_with_exit("error in malloc win buf rcv\n");
     }
+
     shm->win_buf_snd=malloc(sizeof(struct window_snd_buf)*(2*(param_serv.window)));
     if(shm->win_buf_snd==NULL){
         handle_error_with_exit("error in malloc win buf snd\n");
     }
+    
     memset(shm->win_buf_rcv,0,sizeof(struct window_rcv_buf)*(2*(param_serv.window)));//inizializza a zero
     memset(shm->win_buf_snd,0,sizeof(struct window_snd_buf)*(2*(param_serv.window)));//inizializza a zero
 
@@ -123,16 +124,17 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
         handle_error_with_exit("error in bind\n");
     }
 
-    //manda syn ack dopo aver ricevuto il syn e aspetta il comando del client
+    //manda syn ack dopo aver ricevuto il syn(richiesta ricevuta) e aspetta il comando del client
     send_syn_ack(shm->addr.sockfd, &request.addr, sizeof(request.addr),param_serv.loss_prob ); //ultimo parametro è param_serv.loss_prob!!!!
-    alarm(TIMEOUT);//La funzione alarm() invia al processo corrente il segnale SIGALRM dopo che siano trascorsi seconds secondi.
-    
-    if(recvfrom(shm->addr.sockfd,&temp_buff,MAXPKTSIZE,0,(struct sockaddr *)&(shm->addr.dest_addr),&(shm->addr.len))!=-1){//ricevi il comando del client in finestra
-        //bloccati finquando non ricevi il comando dal client
+    alarm(TIMEOUT);     //La funzione alarm() invia al processo corrente il segnale SIGALRM dopo che siano trascorsi seconds secondi.
+                        //Per non farlo bloccare sulla recvfrom se non ricevuo nulla 
+    if(recvfrom(shm->addr.sockfd,&temp_buff,MAXPKTSIZE,0,(struct sockaddr *)&(shm->addr.dest_addr),&(shm->addr.len))!=-1){  //ricevi il comando del client in finestra
+                                                                                                                            //bloccati finquando non ricevi il comando dal client(almeno che non scada il TIMEOUT)
         alarm(0);//ricevuto il cmd-->metto a 0 il timeout non mi serve piu
         print_rcv_message(temp_buff);
         printf(GREEN"connection established\n"RESET);
-        great_alarm_serv=0;//Lo disattivo ( attivato ad 1 nell handler del timeout)
+        great_alarm_serv=0; //Lo disattivo ( attivato ad 1 nell handler del timeout)
+        
         //in base al comando ricevuto il processo figlio server esegue uno dei 3 comandi
        
         if(temp_buff.command==LIST){
@@ -205,7 +207,7 @@ void child_job() {//lavoro che svolge il processo.
     memset(&sa_timeout,0,sizeof(struct sigaction));
     unlock_signal(SIGALRM);
 
-    sem_t*mtx_file=(sem_t*)attach_shm(mtx_file_id);
+    sem_t *mtx_file=(sem_t*)attach_shm(mtx_file_id);
     sem_t *mtx_queue_child=(sem_t*)attach_shm(queue_mtx_id);//ottieni puntatore alla regione di memoria condivisa della coda 
     
     if(close(main_sockfd)==-1){//chiudi il socket del padre
@@ -228,12 +230,14 @@ void child_job() {//lavoro che svolge il processo.
         }
         mtx_prefork->free_process+=1;
         unlock_sem(&(mtx_prefork->sem));
+
+        //Gestisco eventuali richieste
         lock_sem(mtx_queue_child);
         value=(int)msgrcv(msgid,&request,sizeof(struct msgbuf)-sizeof(long),0,0);//Dopo aver preso il lock sulal coda, leggo dalla coda (metto il msg letto in request)
         unlock_sem(mtx_queue_child);//non è un problema prendere il mutex e bloccarsi in coda
         if(value==-1){//errore msgrcv
             lock_sem(&(mtx_prefork->sem));
-            mtx_prefork->free_process-=1;
+            mtx_prefork->free_process-=1;//Ho preso la richiesta(con errore), non sono piu libero
             unlock_sem(&(mtx_prefork->sem));
             handle_error_with_exit("errore in msgrcv\n");
         }
@@ -269,7 +273,7 @@ void create_pool(int num_child){//crea il pool di processi.
     return;//il padre ritorna dopo aver creato i processi
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void*pool_handler_job(void*arg){//thread che gestisce il pool dei processi del server
+void *pool_handler_job(void*arg){//thread che gestisce il pool dei processi del server
     struct mtx_prefork*mtx_prefork=arg;
     int left_process;
     block_signal(SIGALRM);

@@ -182,8 +182,13 @@ void unlock_signal(int signal){//fa ricevere il segnale definito al thread chiam
     if(sigaddset(&set,signal)==-1){//aggiungi segnale al sigset
         handle_error_with_exit("error in sigaddset\n");
     }
-    if(pthread_sigmask(SIG_UNBLOCK,&set,NULL)!=0){//blocca i segnali presenti nel sig_set
-        handle_error_with_exit("error in pthread_sigmask\n");
+    if(pthread_sigmask(SIG_UNBLOCK,&set,NULL)!=0){          /*  blocca i segnali presenti nel sig_set 
+                                                                [The pthread_sigmask() function is just like sigprocmask(2), 
+                                                                with the difference that its use in multithreaded programs is explicitly specified by POSIX.1]    
+
+                                                                sigprocmask() is used to fetch and/or change the signal mask of the calling thread.
+                                                             */
+        handle_error_with_exit("error in pthread_sigmask\n");                                
     }
     return;
 }
@@ -217,6 +222,7 @@ void lock_mtx(pthread_mutex_t *mtx){//lock mutex
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void unlock_mtx(pthread_mutex_t *mtx){//unlock mutex
     if(mtx==NULL){
         handle_error_with_exit("error in unlock_mtx mtx is NULL\n");
@@ -226,6 +232,7 @@ void unlock_mtx(pthread_mutex_t *mtx){//unlock mutex
     }
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void initialize_cond(pthread_cond_t*cond){//inizializza variabile condizione
     if(cond==NULL){
         handle_error_with_exit("error in initialize_cond cond is NULL\n");

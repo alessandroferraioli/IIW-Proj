@@ -67,8 +67,8 @@
 #ifndef LINE_H
 #define LINE_H
 
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //pacchetto da mandare non selective repeat ack=not_an_ack seq=not_a_pkt
-
 struct temp_buffer{//struttura del pacchetto da inviare
     int seq;//numero sequenza
     int ack;//numero ack
@@ -76,13 +76,14 @@ struct temp_buffer{//struttura del pacchetto da inviare
     char command;//comando del pacchetto
     char payload[MAXPKTSIZE-OVERHEAD];// dati pacchetto
 };
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 struct window_rcv_buf{//elemento della finestra di ricezione
     char received;//ricevuto 1==si 0==no
     char command;//comando
     int lap;
     char*payload;//dati pacchetto
 };
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 struct window_snd_buf{//elemento della finestra di trasmissione
     char acked;//riscontrato 1==si 0==da riscontrare 2==vuoto
     char command;//comando
@@ -90,22 +91,21 @@ struct window_snd_buf{//elemento della finestra di trasmissione
     int lap;
     char*payload;//dati pacchetto
 };
-
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 struct addr{//struttura contentente le informazioni per mandare un pacchetto ad un altro host
     int sockfd;
     struct sockaddr_in dest_addr;
     socklen_t len;
 };
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 struct select_param{//parametri di esecuzione
     int window;//grandezza finestra
     double loss_prob;//prob perdita
     int timer_ms;//tempo di ritrasmissione in millisecondi ,se t==0 timer adattativo
 };
-
-struct shm_sel_repeat{//struttura condivisa tra i 2 thread necessaria sia per la sincronizzazione
-// sia per svolgere la richiesta(put/get/list) vera e propria
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+struct shm_sel_repeat{  //struttura condivisa tra i 2 thread necessaria sia per la sincronizzazione
+                        //sia per svolgere la richiesta(put/get/list) vera e propria
 
     struct addr addr;//indirizzo dell'host
     int pkt_fly;//numero pacchetti in volo (va da 0 a w-1)
@@ -133,17 +133,17 @@ struct shm_sel_repeat{//struttura condivisa tra i 2 thread necessaria sia per la
     struct node* head;//puntatore alla testa della lista dinamica
     struct node *tail;//puntatore alla coda della lista dinamica
 };
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 struct mtx_prefork{//mutex usato dai processi server e dal thread pool handler per tenere traccia dei processi liberi
     sem_t sem;
     int free_process;
 };
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 struct msgbuf{//struttura della coda condivisa dei processi per leggere le richieste dei client
     long mtype;
     struct sockaddr_in addr;
 };
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 struct node  {//struttura di un nodo della lista dinamica ordianta,la lista tiene traccia delle trasmissioni e delle ritrasmissioni
     int seq;
     struct timespec tv;//tempo di invio
