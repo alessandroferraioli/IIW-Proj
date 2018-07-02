@@ -187,19 +187,22 @@ void send_list_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //manda parte di file al receiver usando protocollo selective repeat
-//imposta riscontrato =0;
-//incrementa pkt_fly(pkt fly deve essere sempre compreso tra 0 e w-1)
-//salva il file in finestra (per poi eventualmente ritrasmetterla)
-//aumenta byte_sent(byte sent deve essere <=dimensione lista)
-//inserisci le informazioni del pacchetto in una lista dinamica,
-// cosi il thread ritrasmettitore sa quanto aspettare e se ritrasmettere
+    //imposta riscontrato =0;
+    //incrementa pkt_fly(pkt fly deve essere sempre compreso tra 0 e w-1)
+    //salva il file in finestra (per poi eventualmente ritrasmetterla)
+    //aumenta byte_sent(byte sent deve essere <=dimensione lista)
+    //inserisci le informazioni del pacchetto in una lista dinamica,
+    //cosi il thread ritrasmettitore sa quanto aspettare e se ritrasmettere
 void send_data_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
+   
     ssize_t readed = 0;
     temp_buff.command = DATA;
     temp_buff.ack = NOT_AN_ACK;
     temp_buff.seq = shm->seq_to_send;
     lock_mtx(&(shm->mtx));
     shm->win_buf_snd[shm->seq_to_send].acked = 0;
+    
+    //leggo cosa inviare 
     if ((shm->dimension - (shm->byte_sent)) < (int)(MAXPKTSIZE - OVERHEAD)) {//byte mancanti da inviare
         readed = readn(shm->fd, temp_buff.payload, (size_t) (shm->dimension - (shm->byte_sent)));
         if (readed < shm->dimension - (shm->byte_sent)) {
@@ -213,6 +216,7 @@ void send_data_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm
         }
         shm->byte_sent += (MAXPKTSIZE - OVERHEAD);
     }
+    //copio nel buffer 
     copy_buf2_in_buf1(shm->win_buf_snd[shm->seq_to_send].payload, temp_buff.payload, (MAXPKTSIZE - OVERHEAD));
     shm->win_buf_snd[shm->seq_to_send].command = DATA;
     (shm->win_buf_snd[shm->seq_to_send].lap) += 1;
@@ -220,9 +224,13 @@ void send_data_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm
     if (clock_gettime(CLOCK_MONOTONIC, &(shm->win_buf_snd[shm->seq_to_send].time)) != 0) {
         handle_error_with_exit("error in get_time\n");
     }
+
+    //inserisco in lista cosa ho inviato cosi posso gestire eventuali rtx
     insert_ordered(shm->seq_to_send, shm->win_buf_snd[shm->seq_to_send].lap, shm->win_buf_snd[shm->seq_to_send].time, shm->param.timer_ms,
                    &(shm->head), &(shm->tail));
-    unlock_thread_on_a_condition(&(shm->list_not_empty));
+    unlock_thread_on_a_condition(&(shm->list_not_empty));//libero la condizione sulla lista--> non piu vuota 
+
+    //invio pkt
     if (flip_coin(shm->param.loss_prob)) {
         if (sendto(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->addr.dest_addr), shm->addr.len) ==
             -1) {
@@ -366,7 +374,7 @@ void rcv_list_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_rep
 void rcv_data_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     struct temp_buffer ack_buff;
     int written = 0;
-    if (shm->win_buf_rcv[temp_buff.seq].received == 0) {
+    if (shm->win_buf_rcv[temp_buff.seq].received == 0) {//pkt ricevuto non ancora riscontrato
         if ((shm->win_buf_rcv[temp_buff.seq].lap) == (temp_buff.lap - 1)) {
             shm->win_buf_rcv[temp_buff.seq].lap = temp_buff.lap;
             shm->win_buf_rcv[temp_buff.seq].command = temp_buff.command;
@@ -382,6 +390,8 @@ void rcv_data_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_rep
     better_strcpy(ack_buff.payload, "ACK");
     ack_buff.command = DATA;
     ack_buff.lap = temp_buff.lap;
+
+    //invio ack
     if (flip_coin(shm->param.loss_prob)) {
         if (sendto(shm->addr.sockfd, &ack_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->addr.dest_addr), shm->addr.len) ==
             -1) {
@@ -391,23 +401,30 @@ void rcv_data_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_rep
     } else {
         print_msg_sent_and_lost(ack_buff);
     }
+
+
     if (temp_buff.seq == shm->window_base_rcv) {//se pacchetto riempie un buco
 
-        //scorro la finestra fino al primo ancora non ricevuto
-        while (shm->win_buf_rcv[shm->window_base_rcv].received == 1) {
+  
+        while (shm->win_buf_rcv[shm->window_base_rcv].received == 1) {//scorro la finestra fino al primo non ricevuto
+
+            //per ogni elemento della finestra ricevuto 
             if (shm->dimension - shm->byte_written >= (int)(MAXPKTSIZE - OVERHEAD)) {
                 written = (int) writen(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (MAXPKTSIZE - OVERHEAD));
                 if (written < (int)(MAXPKTSIZE - OVERHEAD)) {
                     handle_error_with_exit("error in write\n");
                 }
+                //aggiorno quanto ho scritto
                 shm->byte_written += (MAXPKTSIZE - OVERHEAD);
-            } else {
-                written = (int) writen(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (size_t) shm->dimension - shm->byte_written);
+            } else {//se ho gia finito di scrivere sul file tutta l dim della finestra che mi permettava
+                written = (int) writen(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (size_t) shm->dimension - shm->byte_written);//finisco di scrivere
                 if (written < shm->dimension - shm->byte_written) {
                     handle_error_with_exit("error in write\n");
                 }
                 shm->byte_written += shm->dimension - shm->byte_written;
             }
+
+
             shm-> win_buf_rcv[shm->window_base_rcv].received = 0;//segna pacchetto come non ricevuto
             shm->window_base_rcv = ((shm->window_base_rcv) + 1) % (2 * shm->param.window);//avanza la finestra con modulo di 2W
         }
@@ -448,10 +465,10 @@ void rcv_msg_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repe
     } else {
         print_msg_sent_and_lost(ack_buff);
     }
-    if (temp_buff.seq == shm->window_base_rcv) {//se pacchetto riempie un buco
+
+    if (temp_buff.seq == shm->window_base_rcv) {//se pacchetto riempie un buco-->ovvero sta alla base della finestra, posso scorrere in avanti la finestra
         
-        // scorro la finestra fino al primo ancora non ricevuto
-        while (shm->win_buf_rcv[shm->window_base_rcv].received == 1) {
+        while (shm->win_buf_rcv[shm->window_base_rcv].received == 1) {//finhe ne trovo di riscontrati nella finestra vado a avanti a scorrere
             if (shm->win_buf_rcv[shm->window_base_rcv].command == DATA) {//DATA == 0 
                 if (shm->dimension - shm->byte_written >= (int)(MAXPKTSIZE - OVERHEAD)) {
                     written = (int) writen(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (MAXPKTSIZE - OVERHEAD));//Scrivo n byte sul pkt ( sul file) se ho abbastanza spazio(vedi if su)
@@ -521,6 +538,8 @@ void rcv_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) 
     }
     unlock_mtx(&(shm->mtx));
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 //ricevi ack di un pacchetto contentente parte di file.
 // Segna quel messaggio come riscontrato e verifica se puoi traslare la finestra
 // diminuendo cosi pkt_fly
@@ -528,7 +547,7 @@ void rcv_ack_file_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *
     //tempbuff.command deve essere uguale a data
     lock_mtx(&(shm->mtx));
     if (temp_buff.lap ==shm-> win_buf_snd[temp_buff.ack].lap) {
-        if(shm->win_buf_snd[temp_buff.ack].acked==1){
+        if(shm->win_buf_snd[temp_buff.ack].acked==1){//gia mandato ack
             unlock_mtx(&(shm->mtx));
             return;
         }
@@ -608,7 +627,10 @@ void rcv_ack_list_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *
 
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-//thread ritrasmettitore
+/*  Thread ritrasmettitore
+    Ha il compito di scorrere la lista e vedere i pkt da ritrasmettere in base al timeout 
+
+*/
 void *rtx_job(void *arg) {
     struct shm_sel_repeat *shm=arg;
     struct temp_buffer temp_buff;
@@ -617,17 +639,21 @@ void *rtx_job(void *arg) {
     char to_rtx;
     struct timespec sleep_time;
     block_signal(SIGALRM);//il thread rtx non viene bloccato dal segnale di timeout
-    node = alloca(sizeof(struct node));
+    
+    node = alloca(sizeof(struct node));//lista 
+
     for(;;) {
-        lock_mtx(&(shm->mtx));
+        lock_mtx(&(shm->mtx));//Prendo il lock sulla memoria condivisa 
+
         while (1) {
             if(delete_head(&shm->head,node)==-1){//rimuovi nodo dalla lista,
+                
                 // se lista vuota aspetta sulla condizione
                 wait_on_a_condition(&(shm->list_not_empty),&shm->mtx);//list_not_empty variabile che definisce se la lista sia vuota o meno
-                                                                      //Finche non é vera attendo 
+                                                                      //Finche non é vera attendo con il thread
             }
-            else{
-                if(!to_resend(shm, *node)){//se non è da ritrasmettere rimuovi un altro nodo dalla lista
+            else{//ho rimosso la testa
+                if(!to_resend(shm, *node)){//se non è da ritrasmettere rimuovi un altro nodo dalla lista(riparto dal while)
                     continue;
                 }
                 else{
@@ -636,14 +662,17 @@ void *rtx_job(void *arg) {
                 }
             }
         }
+        //pkt da ritrasmettere
         unlock_mtx(&(shm->mtx));
+
         timer_ns_left=calculate_time_left(*node);//calcola quanto tempo manca per far scadere il timeout
+        
         if(timer_ns_left<=0){//tempo già scaduto ,verifica ancora se è da ritrasmettere[se e'da ritrasmettere invialo subito]
             lock_mtx(&(shm->mtx));
             to_rtx = to_resend(shm, *node);
             unlock_mtx(&(shm->mtx));
             if(!to_rtx){
-                //se non è da ritrasmettere togli un altro nodo dalla lista
+                //se non è da ritrasmettere togli un altro nodo dalla lista-->riparte da for(;;)
                 continue;
             }
             else{
@@ -651,14 +680,16 @@ void *rtx_job(void *arg) {
                 temp_buff.ack = NOT_AN_ACK;//pkt non é un ack in realtá
                 temp_buff.seq = node->seq;
                 temp_buff.lap=node->lap;
+                
                 lock_mtx(&(shm->mtx));
                 copy_buf2_in_buf1(temp_buff.payload, shm->win_buf_snd[node->seq].payload, MAXPKTSIZE - OVERHEAD);
                 temp_buff.command=shm->win_buf_snd[node->seq].command;
+                
                 resend_message(shm->addr.sockfd,&temp_buff,&shm->addr.dest_addr,shm->addr.len,shm->param.loss_prob);
                 if(clock_gettime(CLOCK_MONOTONIC, &shm->win_buf_snd[node->seq].time)!=0){
                     handle_error_with_exit("error in get_time\n");
                 }
-                //dopo averlo ritrasmesso viene riaggiunto alla lista dei pacchetti inviati
+                //dopo averlo ritrasmesso viene riaggiunto alla lista dei pacchetti inviati[inviata in ordine crescente di timeout-->la testa sará sempre la prima ad essere con timeout minore ]
                 insert_ordered(node->seq,node->lap,shm->win_buf_snd[node->seq].time,shm->param.timer_ms,&shm->head,&shm->tail);
                 unlock_mtx(&(shm->mtx));
             }
@@ -668,6 +699,8 @@ void *rtx_job(void *arg) {
             //se quello che ho controllato non é ancora scaduto di sicuro gli altri scadranno tra un tempo maggiore
             sleep_struct(&sleep_time, timer_ns_left);
             nanosleep(&sleep_time , NULL);
+            
+            //quando mi risveglio ricontrollo come sopra
             lock_mtx(&(shm->mtx));
             to_rtx = to_resend(shm, *node);
             unlock_mtx(&(shm->mtx));

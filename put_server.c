@@ -6,39 +6,49 @@
 #include "put_server.h"
 #include "dynamic_list.h"
 #include "file_lock.h"
+
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto tutto il file mettiti in ricezione del fin,manda fin_ack e termina i 2 thread
 void wait_for_fin_put(struct shm_sel_repeat *shm) {
+    
     struct temp_buffer temp_buff;
     alarm(2);//chiusura temporizzata
     errno = 0;
+    
     while (1) {
         if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE,0, (struct sockaddr *) &shm->addr.dest_addr,
                      &shm->addr.len) != -1) {//attendo messaggio di fin,
-            // aspetto finquando non lo ricevo,bloccante o non bloccante??
+
             print_rcv_message(temp_buff);
+            
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
                 continue;//ignora pacchetto
             } else {
                 alarm(0);
             }
+
             if (temp_buff.command == FIN) {//se ricevi fin manda fin_ack solo una volta e termina sia i thread sia la trasmissione
                 alarm(0);
                 send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len, temp_buff, "FIN_ACK", FIN_ACK,
                              shm->param.loss_prob);
-                check_md5(shm->filename, shm->md5_sent, shm->dimension);
+                check_md5(shm->filename, shm->md5_sent, shm->dimension);//verifichiamo che md5 ricevuto e file ricevuto abbiano lo stesso md5
                 pthread_cancel(shm->tid);
                 file_unlock(shm->fd);
                 pthread_exit(NULL);
+
             } else if (temp_buff.seq == NOT_A_PKT && temp_buff.ack != NOT_AN_ACK) {//se è un ack
                 if (seq_is_in_window(shm->window_base_snd, shm->param.window, temp_buff.ack)) {//se è in finestra
                     if(temp_buff.command==DATA){
                         handle_error_with_exit("errore in ack wait for fin\n");
                     }
-                    rcv_ack_in_window(temp_buff, shm);
+                    rcv_ack_in_window(temp_buff, shm);//aggiungi ack in window
                 } else {
                     //ack duplicato
                 }
+
                 alarm(TIMEOUT);
+                
             } else if (!seq_is_in_window(shm->window_base_rcv, shm->param.window, temp_buff.seq)) {//non ack non in finestra
                 rcv_msg_re_send_ack_in_window(temp_buff,shm);
                 alarm(TIMEOUT);
@@ -63,6 +73,7 @@ void wait_for_fin_put(struct shm_sel_repeat *shm) {
 void rcv_put_file(struct shm_sel_repeat *shm) {
     //dopo aver ricevuto messaggio di put manda messaggio di start e si mette in ricezione del file 
     struct temp_buffer temp_buff;
+    
     alarm(TIMEOUT);
     if (shm->fd != -1) {
         send_message_in_window(temp_buff,shm, START,"START");//invia start
@@ -75,11 +86,15 @@ void rcv_put_file(struct shm_sel_repeat *shm) {
                      &shm->addr.len) != -1) {
            
             print_rcv_message(temp_buff);
-            if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {//attendo un start ack
+
+            //CASO IGNORATO 
+            if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {//attendo altro
                 continue;//ignora pacchetto
             } else {
                 alarm(0);
             }
+
+            //CASO FIN
             if (temp_buff.command == FIN) {//se ricevi fin manda fin_ack solo una volta
                 // e termina sia thread sia trasmissione
                 send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len, temp_buff,
@@ -90,23 +105,33 @@ void rcv_put_file(struct shm_sel_repeat *shm) {
                 file_unlock(shm->fd);
                 pthread_exit(NULL);
             }
-            else if (temp_buff.seq == NOT_A_PKT && temp_buff.ack != NOT_AN_ACK) {//se è un ack [quello che attendevo ]
+
+            //CASO ACK
+            else if (temp_buff.seq == NOT_A_PKT && temp_buff.ack != NOT_AN_ACK) {//se è un ack [quello che attendevo]
+
+               
                 if (seq_is_in_window(shm->window_base_snd, shm->param.window, temp_buff.ack)) {//se è in finestra
+                    
                     if(temp_buff.command==DATA){
                         handle_error_with_exit("errore in ack rcv_put_file\n");
                     }
-                    rcv_ack_in_window(temp_buff, shm);
+                    
+                    rcv_ack_in_window(temp_buff, shm);//ricevuto ack nuovo, lo inserisco  nella finestra
                 } else {
                     //ack duplicato
-                }
+                    }
                 alarm(TIMEOUT);
+
+            //NON ACK
             } else if (!seq_is_in_window(shm->window_base_rcv, shm->param.window, temp_buff.seq)) {
                 //se non è ack e non è in finestra
-                rcv_msg_re_send_ack_in_window(temp_buff, shm);
+                rcv_msg_re_send_ack_in_window(temp_buff, shm);//pkt gia riscontrato, rimando ack
                 alarm(TIMEOUT);
             } else if (seq_is_in_window(shm->window_base_rcv, shm->param.window, temp_buff.seq)) {//se non è ack ed è in finestra
+               
                 if (temp_buff.command == DATA) {
-                    rcv_data_send_ack_in_window(temp_buff, shm);
+                   
+                    rcv_data_send_ack_in_window(temp_buff, shm);//e'un dato
                     if ((shm->byte_written) == (shm->dimension)) {//dopo aver ricevuto tutto il file aspetta il fin
                         wait_for_fin_put(shm);
                         return ;
@@ -173,11 +198,13 @@ void execute_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
         handle_error_with_exit("error in payload\n");
     }
    
-    //estrai dal pacchetto filename e dimensione
+    //estrai dal pacchetto dimensione
     better_strcpy(payload, temp_buff.payload);
     first = payload;
     shm->dimension = parse_long_and_move(&payload);
     payload++;
+
+    //estraggo dal pkt il file name 
     better_strncpy(shm->md5_sent, payload, MD5_LEN);
     shm->md5_sent[MD5_LEN] = '\0';
     payload += MD5_LEN;
@@ -190,6 +217,8 @@ void execute_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     if (shm->filename == NULL) {
         handle_error_with_exit("error in malloc\n");
     }
+
+    //assegno il path calcolato e creo il file 
     if (path != NULL) {
         better_strcpy(shm->filename, path);
         shm->fd = open(path, O_WRONLY | O_CREAT, 0666);
@@ -203,8 +232,10 @@ void execute_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     }
     unlock_sem(shm->mtx_file);
     free(first);
+
     payload = NULL;
-    rcv_msg_send_ack_in_window(temp_buff, shm);//invio ack della put
+    rcv_msg_send_ack_in_window(temp_buff, shm);//invio ack della put-->ora posso iniziare 
+
     put_server(shm);
     if (shm->fd != -1) {
         file_unlock(shm->fd);

@@ -5,6 +5,8 @@
 #include "communication.h"
 #include "file_lock.h"
 
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //è stato riscontrato tutto manda il fin e termina trasmissione
 void close_get_send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {//manda fin non in finestra senza sequenza e ack e chiudi
     alarm(0);
@@ -15,9 +17,11 @@ void close_get_send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *sh
     printf(GREEN"File %s correctly sent\n"RESET, shm->filename);
     pthread_exit(NULL);
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto start inizia a mandare il file
 void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     alarm(TIMEOUT);
+    
     while (1) {
         if (shm->pkt_fly < shm->param.window && (shm->byte_sent) < shm->dimension) {
             send_data_in_window(temp_buff, shm);
@@ -32,6 +36,8 @@ void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
             } else {
                 alarm(0);
             }
+
+            //ACK
             if (temp_buff.seq == NOT_A_PKT && temp_buff.ack != NOT_AN_ACK) {//se è un ack
                 if (seq_is_in_window(shm->window_base_snd, shm->param.window, temp_buff.ack)) {//se è in finestra
                     if (temp_buff.command == DATA) {
@@ -93,6 +99,7 @@ void wait_for_start_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm
             handle_error_with_exit("error in open\n");
         }
         errno=0;
+
         file_try_lock=file_try_lock_write(shm->fd);
         if(file_try_lock==-1){
             if(errno==EWOULDBLOCK){
@@ -114,20 +121,26 @@ void wait_for_start_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm
         }
     }
     else {
-        send_message_in_window(temp_buff,shm, ERROR,"doesn't exist");//manda pacchetto errore
+        send_message_in_window(temp_buff,shm, ERROR,"doesn't exist");//manda pacchetto errore[file non esiste]
     }
+
+
     errno = 0;
     alarm(TIMEOUT);
+
+
     while (1) {
         if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *)
                 &shm->addr.dest_addr, &shm->addr.len) != -1) {  //attendo risposta del client,
                                                                 //aspetto finquando non arriva la risposta o scade il timeout
             print_rcv_message(temp_buff);
+            
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
-                continue;//ignora pacchetto
+                continue;//ignora pacchetto,sto attendendo uno start 
             } else {
                 alarm(0);
             }
+            
             if (temp_buff.command == FIN) {//se ricevi fin manda fin_ack e termina i 2 thread
                 send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len, temp_buff,
                              "FIN_ACK", FIN_ACK, shm->param.loss_prob);
@@ -177,7 +190,6 @@ void *get_server_job(void *arg) {
     wait_for_start_get(temp_buff,shm);
     return NULL;
 }
-
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void get_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
     //trasmettitore,ricevitore;

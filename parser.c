@@ -45,6 +45,7 @@ char is_blank(char*string){//ritorna vero se la stringa è composta solo da spaz
     }
     return 1;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int parse_integer_and_move(char**string) {//fa il parse dell'intero e sposta il puntatore al carattere dopo l'intero
     if(*string==NULL || string==NULL){
         handle_error_with_exit("error in parse_integer\n");
@@ -59,7 +60,7 @@ int parse_integer_and_move(char**string) {//fa il parse dell'intero e sposta il 
     *string=errptr;//sposta il puntatore
     return value;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 long parse_long_and_move(char**string) {
     if(*string==NULL || string==NULL){
         handle_error_with_exit("error in parse_integer\n");
@@ -74,7 +75,7 @@ long parse_long_and_move(char**string) {
 	*string=errptr;//sposta il puntatore
     return value;
 }
-
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 double parse_double_and_move(char**string){
     if(*string==NULL || string==NULL){
         handle_error_with_exit("error in parse_double\n");
@@ -89,6 +90,7 @@ double parse_double_and_move(char**string){
     *string=errptr;//sposta il puntatore
     return value;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 long parse_long(char*string) {//fa il parse per ottenere un long
     if(string==NULL){
         handle_error_with_exit("error in parse_integer\n");
@@ -102,6 +104,7 @@ long parse_long(char*string) {//fa il parse per ottenere un long
     }
     return value;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int parse_integer(char*string) {
     if(string==NULL){
         handle_error_with_exit("error in parse_integer\n");
@@ -115,6 +118,7 @@ int parse_integer(char*string) {
     }
     return value;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 double parse_double(char*string){
     if(string==NULL){
         handle_error_with_exit("error in parse_double\n");

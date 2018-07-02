@@ -29,6 +29,7 @@ int file_try_lock_read(int fd){
     return flock(fd,LOCK_SH|LOCK_NB);
     //caller must see this return value and check errno if is EWOULDBLOCK
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int file_try_lock_write(int fd){
     return flock(fd,LOCK_EX|LOCK_NB);
     //caller must see this return value and check errno if is EWOULDBLOCK
