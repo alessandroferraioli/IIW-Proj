@@ -70,7 +70,7 @@ void wait_for_fin_put(struct shm_sel_repeat *shm) {
     }
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void rcv_put_file(struct shm_sel_repeat *shm) {
+void  rcv_put_file(struct shm_sel_repeat *shm) {
     //dopo aver ricevuto messaggio di put manda messaggio di start e si mette in ricezione del file 
     struct temp_buffer temp_buff;
     
@@ -191,7 +191,7 @@ void put_server(struct shm_sel_repeat *shm) {   //crea i 2 thread:
 //ricevuto pacchetto con put dimensione e filename
 void execute_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     //verifica prima che il file esiste(con filename dentro temp_buffer)
-    // ,manda start e si mette in ricezione del file,
+    //manda start e si mette in ricezione del file,
     char *path, *first, *payload;
     payload = malloc(sizeof(char) * (MAXPKTSIZE - OVERHEAD));
     if (payload == NULL) {
@@ -221,7 +221,7 @@ void execute_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     //assegno il path calcolato e creo il file 
     if (path != NULL) {
         better_strcpy(shm->filename, path);
-        shm->fd = open(path, O_WRONLY | O_CREAT, 0666);
+        shm->fd = open(path, O_WRONLY | O_CREAT, 0666);//creo il file
         if (shm->fd == -1) {
             handle_error_with_exit("error in open\n");
         }

@@ -112,7 +112,7 @@ void wait_for_start_list(struct shm_sel_repeat *shm, struct temp_buffer temp_buf
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {//Voglio un dim ack
                 continue;//ignora pacchetto
             } else {
-                alarm(0);
+                alarm(0);//In caso contrario di sicuro ho ricevuto qualcosa che mi piace-->disattivo il timeout
             }
             if (temp_buff.command == FIN) {//se ricevi fin manda fin_ack e chiudi
                 send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len,
@@ -170,7 +170,7 @@ void *list_server_job(void *arg) {
 void list_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
    
     pthread_t tid_snd,tid_rtx; //trasmettitore e ricevitore  +  ritrasmettitore
-    if(pthread_create(&tid_rtx,NULL,rtx_job,shm)!=0){
+    if(pthread_create(&tid_rtx,NULL,rtx_job,shm)!=0){//rtx_job uguale per ogni processo 
         handle_error_with_exit("error in create thread list_server_rtx\n");
     }
     shm->tid=tid_rtx;

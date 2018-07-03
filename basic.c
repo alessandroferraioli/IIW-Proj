@@ -197,7 +197,7 @@ void initialize_sem(sem_t*mtx){//inizializza semaforo
     if(mtx==NULL){
         handle_error_with_exit("error in initialize_sem mtx is NULL\n");
     }
-    if(sem_init(mtx,1,1)==-1){
+    if(sem_init(mtx,1,1)==-1){//condivisa tra processi, con un 1 solo semaforo-->mutex 
         handle_error_with_exit("error in sem_init\n");
     }
     return;

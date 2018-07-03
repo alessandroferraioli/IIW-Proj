@@ -68,7 +68,7 @@
 #define LINE_H
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-//pacchetto da mandare non selective repeat ack=not_an_ack seq=not_a_pkt
+//pacchetto da mandare con selective repeat ack=not_an_ack seq=not_a_pkt
 struct temp_buffer{//struttura del pacchetto da inviare
     int seq;//numero sequenza
     int ack;//numero ack

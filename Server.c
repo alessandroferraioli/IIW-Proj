@@ -9,7 +9,7 @@
 #include "put_server.h"
 
 
-int main_sockfd,msgid,queue_mtx_id,mtx_prefork_id,mtx_file_id,great_alarm_serv=0;//dopo le fork tutti i figli
+int main_sockfd,msgid,queue_mtx_id,mtx_prefork_id,mtx_file_id,great_alarm_serv=0;//dopo le fork tutti i figli-->sono globali
 // sanno quali sono gli id
 struct select_param param_serv;
 char*dir_server;
@@ -40,6 +40,7 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
     struct temp_buffer temp_buff;//pacchetto da inviare
    
     struct shm_sel_repeat *shm=malloc(sizeof(struct shm_sel_repeat));
+
     if(shm==NULL){
         handle_error_with_exit("error in malloc\n");
     }
@@ -79,11 +80,13 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
     shm->head=NULL;
     shm->tail=NULL;
     
+    //alloco memoria buffer ricezione
     shm->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*(param_serv.window)));
     if(shm->win_buf_rcv==NULL){
         handle_error_with_exit("error in malloc win buf rcv\n");
     }
 
+    //alloco memoria buffer di invio
     shm->win_buf_snd=malloc(sizeof(struct window_snd_buf)*(2*(param_serv.window)));
     if(shm->win_buf_snd==NULL){
         handle_error_with_exit("error in malloc win buf snd\n");
@@ -92,7 +95,7 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
     memset(shm->win_buf_rcv,0,sizeof(struct window_rcv_buf)*(2*(param_serv.window)));//inizializza a zero
     memset(shm->win_buf_snd,0,sizeof(struct window_snd_buf)*(2*(param_serv.window)));//inizializza a zero
 
-    for (int i = 0; i < 2 *(param_serv.window); i++) {//alloco memoria su ogni buf della finestra 
+    for (int i = 0; i < 2 *(param_serv.window); i++) {//alloco memoria per i payload di ogni buffer
         
         shm->win_buf_snd[i].payload =malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
         if(shm->win_buf_snd[i].payload==NULL){
@@ -125,7 +128,7 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
     }
 
     //manda syn ack dopo aver ricevuto il syn(richiesta ricevuta) e aspetta il comando del client
-    send_syn_ack(shm->addr.sockfd, &request.addr, sizeof(request.addr),param_serv.loss_prob ); //ultimo parametro è param_serv.loss_prob!!!!
+    send_syn_ack(shm->addr.sockfd, &request.addr, sizeof(request.addr),param_serv.loss_prob );
     alarm(TIMEOUT);     //La funzione alarm() invia al processo corrente il segnale SIGALRM dopo che siano trascorsi seconds secondi.
                         //Per non farlo bloccare sulla recvfrom se non ricevuo nulla 
     if(recvfrom(shm->addr.sockfd,&temp_buff,MAXPKTSIZE,0,(struct sockaddr *)&(shm->addr.dest_addr),&(shm->addr.len))!=-1){  //ricevi il comando del client in finestra
@@ -141,7 +144,7 @@ void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho
             execute_list(temp_buff,shm);
         }
         else if(temp_buff.command==PUT){
-            set_max_buff_rcv_size(shm->addr.sockfd);
+            set_max_buff_rcv_size(shm->addr.sockfd);//lo metto al massimo possibile(in basic.h) senza privilegi root
             execute_put(temp_buff,shm);
             if(close(shm->addr.sockfd)==-1){
                 handle_error_with_exit("error in close socket child process\n");
@@ -198,23 +201,25 @@ void child_job() {//lavoro che svolge il processo.
         //risponde al client;
         //soddisfala richiesta;
     //}
-    struct msgbuf request;//contiene indirizzo del client da servire
+    struct msgbuf request;//contiene indirizzo del client da servire[vedi in basic.h la struct msgbuf]
     int value;
     char done_jobs=0;//contatore richieste eseguite. Se > MAX_PROC_JOB uccido 
     struct sigaction sa_timeout;//gestione timeout
-    struct mtx_prefork*mtx_prefork=(struct mtx_prefork*)attach_shm(mtx_prefork_id);//ottieni puntatore alla regione di memoria condivisa dei processi
+    struct mtx_prefork*mtx_prefork=(struct mtx_prefork*)attach_shm(mtx_prefork_id); //ottieni puntatore alla regione di memoria condivisa dei processi
+                                                                                    //Usato per accedere alla variabile free process in modo da rigenereare quando stanno per finire
                                                                                     
     memset(&sa_timeout,0,sizeof(struct sigaction));
-    unlock_signal(SIGALRM);
+    unlock_signal(SIGALRM);//il processo puo accettare il segnale SIGALARM
 
-    sem_t *mtx_file=(sem_t*)attach_shm(mtx_file_id);
-    sem_t *mtx_queue_child=(sem_t*)attach_shm(queue_mtx_id);//ottieni puntatore alla regione di memoria condivisa della coda 
-    
+    sem_t *mtx_file=(sem_t*)attach_shm(mtx_file_id);//puntatore al semaforo
+    sem_t *mtx_queue_child=(sem_t*)attach_shm(queue_mtx_id);//ottieni puntatore al semaforo che gestitsce la coda di richieste
+
+
     if(close(main_sockfd)==-1){//chiudi il socket del padre
         handle_error_with_exit("error in close socket fd\n");
     }
 
-    sa_timeout.sa_sigaction = timeout_handler_serv;//disposizione per segnale alarm
+    sa_timeout.sa_sigaction = timeout_handler_serv;//disposizione per segnale alarm,quando arriva l'alarm metto great_alarm =1
     if (sigemptyset(&sa_timeout.sa_mask) == -1) {
         handle_error_with_exit("error in sig_empty_set\n");
     }
@@ -223,18 +228,23 @@ void child_job() {//lavoro che svolge il processo.
     }
 
     for(;;){
-        lock_sem(&(mtx_prefork->sem));//semaforo numero processi
-        if(mtx_prefork->free_process>=NUM_FREE_PROCESS){
+        lock_sem(&(mtx_prefork->sem));//semaforo numero processi liberi cosi da poterlo modificare
+        
+        if(mtx_prefork->free_process>=NUM_FREE_PROCESS){//esco in questo caso, ho creato piu processi
             unlock_sem(&(mtx_prefork->sem));
             exit(EXIT_SUCCESS);
         }
-        mtx_prefork->free_process+=1;
+
+        mtx_prefork->free_process+=1;//abbiamo un processo in piu [io stesso] che puo gestire le richieste
         unlock_sem(&(mtx_prefork->sem));
 
         //Gestisco eventuali richieste
-        lock_sem(mtx_queue_child);
-        value=(int)msgrcv(msgid,&request,sizeof(struct msgbuf)-sizeof(long),0,0);//Dopo aver preso il lock sulal coda, leggo dalla coda (metto il msg letto in request)
+        lock_sem(mtx_queue_child);//prendo lock sulla coda di msg contentente le richieste
+        value=(int)msgrcv(msgid,&request,sizeof(struct msgbuf)-sizeof(long),0,0);   //Dopo aver preso il lock sulla coda, leggo dalla coda (metto il msg letto in request)
+                                                                                    //request é di tipo msg_buf
         unlock_sem(mtx_queue_child);//non è un problema prendere il mutex e bloccarsi in coda
+        
+
         if(value==-1){//errore msgrcv
             lock_sem(&(mtx_prefork->sem));
             mtx_prefork->free_process-=1;//Ho preso la richiesta(con errore), non sono piu libero
@@ -250,7 +260,7 @@ void child_job() {//lavoro che svolge il processo.
       
         done_jobs++;//incrementa numero di lavori svolti
         if(done_jobs>MAX_PROC_JOB){
-            exit(EXIT_SUCCESS);
+            exit(EXIT_SUCCESS);//uccido processo
         }
     }
     return;
@@ -274,7 +284,7 @@ void create_pool(int num_child){//crea il pool di processi.
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void *pool_handler_job(void*arg){//thread che gestisce il pool dei processi del server
-    struct mtx_prefork*mtx_prefork=arg;
+    struct mtx_prefork*mtx_prefork=arg;//la uso per accedere al campo free process che verra modificato dai processi figli per gestire la rigenerazione
     int left_process;
     block_signal(SIGALRM);
     /*Ciclicamente controllo : 
@@ -284,6 +294,7 @@ void *pool_handler_job(void*arg){//thread che gestisce il pool dei processi del 
     */
 
     for(;;){
+        //Stuttura ad accesso esclusivo controlalta dal mtx_prefork
         lock_sem(&(mtx_prefork->sem));
         if(mtx_prefork->free_process<NUM_FREE_PROCESS){
             left_process=NUM_FREE_PROCESS-mtx_prefork->free_process;
@@ -293,7 +304,7 @@ void *pool_handler_job(void*arg){//thread che gestisce il pool dei processi del 
         else{
             unlock_sem(&(mtx_prefork->sem));
         }
-        while((waitpid(-1,NULL,WNOHANG))>0);
+        while((waitpid(-1,NULL,WNOHANG))>0);//waitpid non blccante 
     }
     return NULL;
 }
@@ -316,9 +327,12 @@ void create_thread_pool_handler(struct mtx_prefork*mtx_prefork){
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int main(int argc,char*argv[]) {//funzione principale processo server
+    
     int fd,readed;
     socklen_t len;
+    
     char commandBuffer[MAXCOMMANDLINE+1],*line,*command,localname[80];
+    
     struct sockaddr_in addr,cliaddr;
     struct msgbuf msgbuf;//struttura del messaggio della coda
 
@@ -333,6 +347,7 @@ int main(int argc,char*argv[]) {//funzione principale processo server
     srand((unsigned int)time(NULL));
     check_if_dir_exist(argv[1]);//verifica che directory passata come parametro esiste
     dir_server=add_slash_to_dir(argv[1]);
+
     //verifica che il file parameter.txt
     better_strcpy(localname,"./parameter.txt");
     fd=open(localname,O_RDONLY);
@@ -379,30 +394,34 @@ int main(int argc,char*argv[]) {//funzione principale processo server
     if(close(fd)==-1){
         handle_error_with_exit("error in close file\n");
     }
+
     free(command);//liberazione memoria della linea retta dal file
     line=NULL;
 
     //inizializza memorie condivise contenenti semafori e inizializza coda
-    mtx_prefork_id=get_id_shared_mem(sizeof(struct mtx_prefork));//la struct mtx_prefork viene usata per tenere traccia dei processi liberi
-    queue_mtx_id=get_id_shared_mem(sizeof(sem_t));
+    mtx_prefork_id=get_id_shared_mem(sizeof(struct mtx_prefork));//la struct mtx_prefork viene usata per tenere traccia dei processi liberi[ogni processo andrá ad aggiornare il valore di free process]
+    queue_mtx_id=get_id_shared_mem(sizeof(sem_t));//memoria condivisa contenente il semaforo per la coda 
     msgid=get_id_msg_queue();//crea coda di messaggi id globale
-    mtx_file_id=get_id_shared_mem(sizeof(sem_t));
+    mtx_file_id=get_id_shared_mem(sizeof(sem_t));//mtx per file
 
+    //Prendo puntatori shm 
     mtx_file=(sem_t*)attach_shm(mtx_file_id);//Ritorna puntatore alla shared memory indicata dall'id passato alla funzione
     mtx_queue=(sem_t*)attach_shm(queue_mtx_id);//mutex per accedere alla coda
     mtx_prefork=(struct mtx_prefork*)attach_shm(mtx_prefork_id);//mutex tra processi e pool handler
+    
+
     initialize_sem(mtx_queue);//inizializza memoria condivisa
     initialize_sem(mtx_file);
-    initialize_mtx_prefork(mtx_prefork);//inizializza memoria condivisa
+    initialize_mtx_prefork(mtx_prefork);//inizializza memoria condivisa[uguale a sopra solo che metto gia a 0 la variabile free_process]
 
-    memset((void *)&addr, 0, sizeof(addr));//inizializza socket processo principale
+    //inizializza socket processo principale
+    memset((void *)&addr, 0, sizeof(addr));
     addr.sin_family=AF_INET;
     addr.sin_port=htons(SERVER_PORT);
     addr.sin_addr.s_addr=htonl(INADDR_ANY);
     if ((main_sockfd = socket(AF_INET, SOCK_DGRAM,0)) < 0) {
         handle_error_with_exit("error in socket create\n");
     }
-
     if (bind(main_sockfd,(struct sockaddr*)&addr,sizeof(addr)) < 0) {
         handle_error_with_exit("error in bind\n");
     }

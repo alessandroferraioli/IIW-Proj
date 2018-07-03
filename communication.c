@@ -435,10 +435,12 @@ void rcv_data_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_rep
 //riceve messaggio e manda ack del messaggio.
 //segna messaggio in finestra,segna che è stato ricevuto e verifica se la finestra può essere traslata
 void rcv_msg_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
-    struct temp_buffer ack_buff;
+    struct temp_buffer ack_buff;//pkt di ack da inviare
     int written;
 
-    if (shm->win_buf_rcv[temp_buff.seq].received == 0) {//se il msg ricevuto non é stato ancora riscontrato
+    if (shm->win_buf_rcv[temp_buff.seq].received == 0) {    //accedo al campo temp_buf.seq contenente la seq del pkt(msg)ricevuto e vedo se il corrispondente nella finestra di rcv
+                                                            //e'marcato come non ricevuto
+
         if ((shm->win_buf_rcv[temp_buff.seq].lap) == (temp_buff.lap - 1)) {
             shm-> win_buf_rcv[temp_buff.seq].lap = temp_buff.lap;
             shm->win_buf_rcv[temp_buff.seq].command = temp_buff.command;
@@ -450,8 +452,8 @@ void rcv_msg_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repe
     }
 
     //riempio la struttura della coda condivisa
-    ack_buff.ack = temp_buff.seq;
-    ack_buff.seq = NOT_A_PKT;
+    ack_buff.ack = temp_buff.seq;//ack = al valore di seq
+    ack_buff.seq = NOT_A_PKT;//e'un ack
     better_strcpy(ack_buff.payload, "ACK");//metto l'ack nel buff 
     ack_buff.command = temp_buff.command;
     ack_buff.lap = temp_buff.lap;
@@ -467,7 +469,7 @@ void rcv_msg_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repe
     }
 
     if (temp_buff.seq == shm->window_base_rcv) {//se pacchetto riempie un buco-->ovvero sta alla base della finestra, posso scorrere in avanti la finestra
-        
+        //Scorro finestra in avanti
         while (shm->win_buf_rcv[shm->window_base_rcv].received == 1) {//finhe ne trovo di riscontrati nella finestra vado a avanti a scorrere
             if (shm->win_buf_rcv[shm->window_base_rcv].command == DATA) {//DATA == 0 
                 if (shm->dimension - shm->byte_written >= (int)(MAXPKTSIZE - OVERHEAD)) {
@@ -638,6 +640,8 @@ void *rtx_job(void *arg) {
     long timer_ns_left;
     char to_rtx;
     struct timespec sleep_time;
+
+    
     block_signal(SIGALRM);//il thread rtx non viene bloccato dal segnale di timeout
     
     node = alloca(sizeof(struct node));//lista 
