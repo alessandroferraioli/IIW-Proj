@@ -17,7 +17,7 @@ FUNZIONI
 
 create_pool-->make_pool_process [Server.c]
 create_thread_pool_handler-->make_pool_handler[Server.c]
-reply_to_syn_and_execute_command-->
+reply_to_syn_and_execute_command-->reply_syn_exe_cmd[Server.c]
 
 
 
