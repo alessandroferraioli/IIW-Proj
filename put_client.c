@@ -1,7 +1,7 @@
 #include "basic.h"
 #include "timer.h"
 #include "Client.h"
-#include "communication.h"
+#include "functions_communication.h"
 #include "put_client.h"
 #include "dynamic_list.h"
 #include "file_lock.h"

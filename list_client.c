@@ -3,7 +3,7 @@
 #include "timer.h"
 #include "Client.h"
 #include "list_client.h"
-#include "communication.h"
+#include "functions_communication.h"
 #include "dynamic_list.h"
 
 //dopo aver ricevuto messaggio di errore manda fin e aspetta fin_ack cosi puoi chiudere la trasmissione

@@ -3,6 +3,9 @@ FILE
 io.c-->manage_io.c
 io.h-->manage_io.h
 
+communication.c-->functions_communication.c
+communication.h-->functions_communication.h
+
 
 FUNZIONI
 

@@ -2,7 +2,7 @@
 #include "timer.h"
 #include "Server.h"
 #include "list_server.h"
-#include "communication.h"
+#include "functions_communication.h"
 
 void close_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
 //dopo aver riscontrato tutti i pacchetti manda fin non in finestra

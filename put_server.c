@@ -2,7 +2,7 @@
 #include "parser.h"
 #include "timer.h"
 #include "Server.h"
-#include "communication.h"
+#include "functions_communication.h"
 #include "put_server.h"
 #include "dynamic_list.h"
 #include "file_lock.h"

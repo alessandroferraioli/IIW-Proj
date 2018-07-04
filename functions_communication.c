@@ -4,7 +4,7 @@
 #include "timer.h"
 #include "Server.h"
 #include "Client.h"
-#include "communication.h"
+#include "functions_communication.h"
 #include "dynamic_list.h"
 //commentare il primo o secondo blocco di funzioni print
 // in modo tale da avere o non avere le stampe relative all'invio o alla ricezione dei pacchetti

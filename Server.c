@@ -5,7 +5,7 @@
 #include "Server.h"
 #include "list_server.h"
 #include "get_server.h"
-#include "communication.h"
+#include "functions_communication.h"
 #include "put_server.h"
 
 

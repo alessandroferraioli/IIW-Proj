@@ -5,7 +5,7 @@
 #include "Client.h"
 #include "list_client.h"
 #include "get_client.h"
-#include "communication.h"
+#include "functions_communication.h"
 #include "put_client.h"
 #include "file_lock.h"
 
