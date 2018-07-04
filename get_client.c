@@ -4,7 +4,7 @@
 #include "Client.h"
 #include "get_client.h"
 #include "functions_communication.h"
-#include "file_lock.h"
+#include "lock_functions.h"
 //dopo aver ricevuto messaggio di errore aspetta messaggio di fin_ack
 int close_connection_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
     char*error_message=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD));

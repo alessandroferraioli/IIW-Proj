@@ -5,7 +5,7 @@
 #include "functions_communication.h"
 #include "put_server.h"
 #include "dynamic_list.h"
-#include "file_lock.h"
+#include "lock_functions.h"
 
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

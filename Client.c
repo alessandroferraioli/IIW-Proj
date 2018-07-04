@@ -7,7 +7,7 @@
 #include "get_client.h"
 #include "functions_communication.h"
 #include "put_client.h"
-#include "file_lock.h"
+#include "lock_functions.h"
 
 int great_alarm_client = 0;//se diventa 1 è scattato il timer globale
 struct select_param param_client;

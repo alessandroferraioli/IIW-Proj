@@ -4,7 +4,7 @@
 #include "functions_communication.h"
 #include "put_client.h"
 #include "dynamic_list.h"
-#include "file_lock.h"
+#include "lock_functions.h"
 
 //entra qui dopo aver ricevuto il messaggio di errore
 int close_connection_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
