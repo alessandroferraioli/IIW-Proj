@@ -1,5 +1,5 @@
 #include "basic.h"
-#include "timer.h"
+#include "timer_functions.h"
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 char calc_file_MD5(char *filename, char *md5_sum, long dimension){//calcola md5 di un file
     if(filename==NULL || md5_sum==NULL){

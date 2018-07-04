@@ -1,6 +1,6 @@
 #include <time.h>
 #include "basic.h"
-#include "timer.h"
+#include "timer_functions.h"
 #include "Client.h"
 #include "Server.h"
 #include "dynamic_list.h"

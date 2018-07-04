@@ -1,7 +1,7 @@
 #include <sys/time.h>
 #include "basic.h"
 #include "manage_io.h"
-#include "timer.h"
+#include "timer_functions.h"
 #include "Server.h"
 #include "Client.h"
 #include "functions_communication.h"

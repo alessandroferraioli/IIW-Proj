@@ -1,5 +1,5 @@
 #include "basic.h"
-#include "timer.h"
+#include "timer_functions.h"
 #include "lock_functions.h"
 
 int file_lock_read(int fd){

@@ -1,7 +1,7 @@
 #include "basic.h"
 #include "manage_io.h"
 #include "parser.h"
-#include "timer.h"
+#include "timer_functions.h"
 #include "Client.h"
 #include "list_client.h"
 #include "get_client.h"

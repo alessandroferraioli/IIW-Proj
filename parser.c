@@ -1,6 +1,6 @@
 #include "basic.h"
 #include "parser.h"
-#include "timer.h"
+#include "timer_functions.h"
 
 
 void move_pointer(char**string,int n){//sposta un puntatore di n posizioni
