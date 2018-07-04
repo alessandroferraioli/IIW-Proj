@@ -34,7 +34,7 @@ void initialize_mtx_prefork(struct mtx_prefork*mtx_prefork){//inizializza memori
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void reply_to_syn_and_execute_command(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg dalla coda di richieste e soddisfo il cmd
+void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg dalla coda di richieste e soddisfo il cmd
     
     struct sockaddr_in serv_addr;
     struct temp_buffer temp_buff;//pacchetto da inviare
@@ -256,7 +256,7 @@ void child_job() {//lavoro che svolge il processo.
         mtx_prefork->free_process-=1;
         unlock_sem(&(mtx_prefork->sem));
 
-        reply_to_syn_and_execute_command(request,mtx_file);//soddisfa la richiesta
+        reply_syn_exe_cmd(request,mtx_file);//soddisfa la richiesta
       
         done_jobs++;//incrementa numero di lavori svolti
         if(done_jobs>MAX_PROC_JOB){
@@ -266,7 +266,7 @@ void child_job() {//lavoro che svolge il processo.
     return;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void create_pool(int num_child){//crea il pool di processi.
+void make_pool_process(int num_child){//crea il pool di processi.
 // Ogni processo ha il compito di gestire le richieste
     int pid;
     if(num_child<0){
@@ -299,7 +299,7 @@ void *pool_handler_job(void*arg){//thread che gestisce il pool dei processi del 
         if(mtx_prefork->free_process<NUM_FREE_PROCESS){
             left_process=NUM_FREE_PROCESS-mtx_prefork->free_process;
             unlock_sem(&(mtx_prefork->sem));
-            create_pool(left_process);//crea i processi rimanenti per arrivare a NUM_FREE_PROCESS
+            make_pool_process(left_process);//crea i processi rimanenti per arrivare a NUM_FREE_PROCESS
         }
         else{
             unlock_sem(&(mtx_prefork->sem));
@@ -310,7 +310,7 @@ void *pool_handler_job(void*arg){//thread che gestisce il pool dei processi del 
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void create_thread_pool_handler(struct mtx_prefork*mtx_prefork){
+void make_pool_handler(struct mtx_prefork*mtx_prefork){
 //crea il gestore(thread) della riserva di processi
     if(mtx_prefork==NULL){
         handle_error_with_exit("error in create thread_pool_handler\n");
@@ -426,10 +426,10 @@ int main(int argc,char*argv[]) {//funzione principale processo server
         handle_error_with_exit("error in bind\n");
     }
 
-    create_pool(NUM_FREE_PROCESS);//crea il pool di NUM_FREE_PROCESS(definito in basic.h) processi
+    make_pool_process(NUM_FREE_PROCESS);//crea il pool di NUM_FREE_PROCESS(definito in basic.h) processi
 
     //Da qui continua solo il processo padre-->i figli non ritornano dalla child_job()
-    create_thread_pool_handler(mtx_prefork);//crea il thread che gestisce la riserva di processi
+    make_pool_handler(mtx_prefork);//crea il thread che gestisce la riserva di processi
     printf(GREEN"Bootstrap completed\n"RESET);
 
     //Ciclicamente vedo se arrivano msg dal client e li metto in coda

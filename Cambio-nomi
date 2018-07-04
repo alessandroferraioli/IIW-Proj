@@ -12,10 +12,18 @@ file_lock.h-->lock_functions.h
 timer.c-->timer_functions.c
 timer.h-->timer_functions.h
 
-
+--------------------------------------------------------------------------------------------------
 FUNZIONI
 
+create_pool-->make_pool_process [Server.c]
+create_thread_pool_handler-->make_pool_handler[Server.c]
+reply_to_syn_and_execute_command-->
 
 
 
+-------------------------------------------------------------------------------------------
 VARIABILI
+
+
+
+--------------------------------------------------------------------------------------------------
