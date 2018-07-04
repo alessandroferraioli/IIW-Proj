@@ -20,6 +20,7 @@ void move_pointer(char**string,int n){//sposta un puntatore di n posizioni
     return;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int skip_space(char**string){//sposta un puntatore finquando trova caratteri uguali allo spazio
     if(*string==NULL || string==NULL){
         handle_error_with_exit("error in move_pointer\n");
@@ -31,6 +32,7 @@ int skip_space(char**string){//sposta un puntatore finquando trova caratteri ugu
     }
     return count;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 char is_blank(char*string){//ritorna vero se la stringa è composta solo da spazi
     if(string==NULL){
         handle_error_with_exit("error in is_blank\n");
@@ -61,6 +63,7 @@ int parse_integer_and_move(char**string) {//fa il parse dell'intero e sposta il 
     return value;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 long parse_long_and_move(char**string) {
     if(*string==NULL || string==NULL){
         handle_error_with_exit("error in parse_integer\n");
@@ -104,7 +107,6 @@ long parse_long(char*string) {//fa il parse per ottenere un long
     }
     return value;
 }
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 int parse_integer(char*string) {
     if(string==NULL){
         handle_error_with_exit("error in parse_integer\n");
@@ -118,7 +120,6 @@ int parse_integer(char*string) {
     }
     return value;
 }
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 double parse_double(char*string){
     if(string==NULL){
         handle_error_with_exit("error in parse_double\n");
