@@ -8,7 +8,7 @@
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //è stato riscontrato tutto manda il fin e termina trasmissione
-void close_get_send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {//manda fin non in finestra senza sequenza e ack e chiudi
+void close_get_fin( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {//manda fin non in finestra senza sequenza e ack e chiudi
     alarm(0);
     //manda fin
     send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len, temp_buff, "FIN",
@@ -44,7 +44,7 @@ void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
                         rcv_ack_file_in_window(temp_buff, shm);
                         if (shm->byte_readed == shm->dimension) {
                             //se è stato riscontrato tutto vai nello stato di chiusura connessione
-                            close_get_send_file(temp_buff, shm);
+                            close_get_fin(temp_buff, shm);
                             pthread_cancel(shm->tid);
                             pthread_exit(NULL);
                         }
@@ -52,7 +52,7 @@ void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
                         rcv_ack_in_window(temp_buff, shm);
                         if (shm->byte_readed == shm->dimension) {
                             //se tutti i byte sono stati riscontrati vai in chiusura
-                            close_get_send_file(temp_buff, shm);
+                            close_get_fin(temp_buff, shm);
                             pthread_cancel(shm->tid);
                             pthread_exit(NULL);
                         }
@@ -82,7 +82,7 @@ void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto il comando get manda dimensione del file e aspetta start
-void wait_for_start_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
+void wait_get_start(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
     char *path, dim_string[15];
     int file_try_lock;
     path = generate_full_pathname(shm->filename, dir_server);
@@ -187,7 +187,7 @@ void wait_for_start_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm
 void *get_server_job(void *arg) {
     struct shm_sel_repeat *shm = arg;
     struct temp_buffer temp_buff;
-    wait_for_start_get(temp_buff,shm);
+    wait_get_start(temp_buff,shm);
     return NULL;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

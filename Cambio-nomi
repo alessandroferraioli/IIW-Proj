@@ -25,10 +25,14 @@ reply_to_syn_and_execute_command-->reply_syn_exe_cmd[Server.c]
 initialize_mtx_prefork-->setup_mtx_prefork[Server.c]
 
 execute_get-->exe_get[get_server.c]
+wait_for_start_get-->wait_get_start[get_server.c]
+close_get_send_file-->close_get_fin[get_server.c]
 
 execute_list-->exe_list[list_server.c]
+wait_for_start_list-->wait_list_start[list_server.c]
 
 execute_put-->exe_put[put_server.c]
+wait_for_fin_put-->wait_put_fin[put_server.c]
 
 
 

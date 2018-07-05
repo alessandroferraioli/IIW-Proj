@@ -81,7 +81,7 @@ void send_list( struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto messaggio list manda la dimensione della lista e aspetta start
-void wait_for_start_list(struct shm_sel_repeat *shm, struct temp_buffer temp_buff) {
+void wait_list_start(struct shm_sel_repeat *shm, struct temp_buffer temp_buff) {
     char dim[15];
     lock_sem(shm->mtx_file);
 
@@ -162,7 +162,7 @@ void wait_for_start_list(struct shm_sel_repeat *shm, struct temp_buffer temp_buf
 void *list_server_job(void *arg) {
     struct shm_sel_repeat *shm= arg;
     struct temp_buffer temp_buff;
-    wait_for_start_list(shm, temp_buff);
+    wait_list_start(shm, temp_buff);
     return NULL;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

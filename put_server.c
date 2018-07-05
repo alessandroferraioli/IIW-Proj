@@ -10,7 +10,7 @@
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto tutto il file mettiti in ricezione del fin,manda fin_ack e termina i 2 thread
-void wait_for_fin_put(struct shm_sel_repeat *shm) {
+void wait_put_fin(struct shm_sel_repeat *shm) {
     
     struct temp_buffer temp_buff;
     alarm(2);//chiusura temporizzata
@@ -133,7 +133,7 @@ void  rcv_put_file(struct shm_sel_repeat *shm) {
                    
                     rcv_data_send_ack_in_window(temp_buff, shm);//e'un dato
                     if ((shm->byte_written) == (shm->dimension)) {//dopo aver ricevuto tutto il file aspetta il fin
-                        wait_for_fin_put(shm);
+                        wait_put_fin(shm);
                         return ;
                     }
                 } else {
