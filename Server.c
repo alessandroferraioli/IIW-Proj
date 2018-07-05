@@ -32,22 +32,7 @@ void setup_mtx_prefork(struct mtx_prefork*mtx_prefork){//inizializza memoria con
     mtx_prefork->free_process=0;
     return;
 }
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void setup_timer(struct shm_sel_repeat **shm_temp){
-     if(param_serv.timer_ms !=0 ) {
-        (*shm_temp)->param.timer_ms = param_serv.timer_ms;
-        (*shm_temp)->adaptive = 0;
-    }
-    else{
-        (*shm_temp)->param.timer_ms = TIMER_BASE_ADAPTIVE;
-        (*shm_temp)->adaptive = 1;
-        (*shm_temp)->dev_RTT_ms=0;
-        (*shm_temp)->est_RTT_ms=TIMER_BASE_ADAPTIVE;
-    }
 
-
-
-}
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void allocate_memory_payload(struct shm_sel_repeat **shm){
     for (int i = 0; i < 2 *(param_serv.window); i++) {//alloco memoria per i payload di ogni buffer
@@ -93,6 +78,23 @@ void allocate_memory_shm(struct shm_sel_repeat **shm){
 
     allocate_memory_payload(shm);
 }
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+void setup_timer(struct shm_sel_repeat **shm_temp){
+     if(param_serv.timer_ms !=0 ) {
+        (*shm_temp)->param.timer_ms = param_serv.timer_ms;
+        (*shm_temp)->adaptive = 0;
+    }
+    else{
+        (*shm_temp)->param.timer_ms = TIMER_BASE_ADAPTIVE;
+        (*shm_temp)->adaptive = 1;
+        (*shm_temp)->dev_RTT_ms=0;
+        (*shm_temp)->est_RTT_ms=TIMER_BASE_ADAPTIVE;
+    }
+
+
+
+}
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void fillUp_shm(struct shm_sel_repeat **shm_temp,struct msgbuf request,sem_t *mtx_file){
 
@@ -120,6 +122,28 @@ void fillUp_shm(struct shm_sel_repeat **shm_temp,struct msgbuf request,sem_t *mt
     (*shm_temp)->tail=NULL;
     
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+void free_memory_shm(struct shm_sel_repeat **shm){
+ //libera la memoria della shared memory a fine lavoro
+    for (int i = 0; i < 2 *(param_serv.window); i++) {
+        free((*shm)->win_buf_snd[i].payload);
+        (*shm)->win_buf_snd[i].payload=NULL;
+        free((*shm)->win_buf_rcv[i].payload);
+        (*shm)->win_buf_rcv[i].payload=NULL;
+    }
+
+
+    free((*shm)->win_buf_rcv);
+    free((*shm)->win_buf_snd);
+    (*shm)->win_buf_snd=NULL;
+    (*shm)->win_buf_rcv=NULL;
+    free((*shm));
+    (*shm)=NULL;
+
+
+}
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg dalla coda di richieste e soddisfo il cmd
     
@@ -201,21 +225,9 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
         return ;
     }
 
-    //libera la memoria della shared memory a fine lavoro
-    for (int i = 0; i < 2 *(param_serv.window); i++) {
-        free(shm->win_buf_snd[i].payload);
-        shm->win_buf_snd[i].payload=NULL;
-        free(shm->win_buf_rcv[i].payload);
-        shm->win_buf_rcv[i].payload=NULL;
-    }
+    free_memory_shm(&shm);
 
 
-    free(shm->win_buf_rcv);
-    free(shm->win_buf_snd);
-    shm->win_buf_snd=NULL;
-    shm->win_buf_rcv=NULL;
-    free(shm);
-    shm=NULL;
     return;
 }
 
