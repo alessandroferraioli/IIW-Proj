@@ -24,6 +24,8 @@ initialize_mtx_prefork-->setup_mtx_prefork[Server.c]
 check_if_file_exist-->file_exist[basic.c]
 
 
+execute_get-->exe_get[get_server.c]
+
 
 -------------------------------------------------------------------------------------------
 VARIABILI

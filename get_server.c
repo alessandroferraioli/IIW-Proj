@@ -215,7 +215,7 @@ void get_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //ricevuto messaggio get filename
-void execute_get(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
+void exe_get(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     //verifica prima che il file con nome dentro temp_buffer esiste
     //manda la dimensione
     //aspetta lo start e inizia a mandare il file

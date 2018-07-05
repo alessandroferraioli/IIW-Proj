@@ -151,7 +151,7 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
             }
         }
         else if(temp_buff.command==GET){
-            execute_get(temp_buff,shm);
+            exe_get(temp_buff,shm);
             if(close(shm->addr.sockfd)==-1){
                 handle_error_with_exit("error in close socket child process\n");
             }
