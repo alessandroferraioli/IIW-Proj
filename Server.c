@@ -33,6 +33,24 @@ void setup_mtx_prefork(struct mtx_prefork*mtx_prefork){//inizializza memoria con
     return;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+void setup_timer(struct shm_sel_repeat **shm_temp){
+     if(param_serv.timer_ms !=0 ) {
+        (*shm_temp)->param.timer_ms = param_serv.timer_ms;
+        (*shm_temp)->adaptive = 0;
+    }
+    else{
+        (*shm_temp)->param.timer_ms = TIMER_BASE_ADAPTIVE;
+        (*shm_temp)->adaptive = 1;
+        (*shm_temp)->dev_RTT_ms=0;
+        (*shm_temp)->est_RTT_ms=TIMER_BASE_ADAPTIVE;
+    }
+
+
+
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 void fillUp_shm(struct shm_sel_repeat **shm_temp,struct msgbuf request,sem_t *mtx_file){
 
     (*shm_temp)->fd=-1;
@@ -51,6 +69,13 @@ void fillUp_shm(struct shm_sel_repeat **shm_temp,struct msgbuf request,sem_t *mt
     (*shm_temp)->seq_to_send=0;
     (*shm_temp)->addr.len=sizeof(request.addr);
     (*shm_temp)->param.window=param_serv.window;//primo pacchetto della finestra->primo non riscontrato
+
+    setup_timer(shm_temp);
+
+    (*shm_temp)->param.loss_prob=param_serv.loss_prob;
+    (*shm_temp)->head=NULL;
+    (*shm_temp)->tail=NULL;
+    
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg dalla coda di richieste e soddisfo il cmd
@@ -85,6 +110,8 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
     shm->seq_to_send=0;
     shm->addr.len=sizeof(request.addr);
     shm->param.window=param_serv.window;//primo pacchetto della finestra->primo non riscontrato */
+
+  /*  setup_timer(param_serv, &shm);
     
     if(param_serv.timer_ms !=0 ) {
         shm->param.timer_ms = param_serv.timer_ms;
@@ -95,7 +122,7 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
         shm->adaptive = 1;
         shm->dev_RTT_ms=0;
         shm->est_RTT_ms=TIMER_BASE_ADAPTIVE;
-    }
+    }  */
 
     shm->param.loss_prob=param_serv.loss_prob;
     shm->head=NULL;
