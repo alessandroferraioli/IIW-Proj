@@ -33,7 +33,26 @@ void setup_mtx_prefork(struct mtx_prefork*mtx_prefork){//inizializza memoria con
     return;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+void fillUp_shm(struct shm_sel_repeat **shm_temp,struct msgbuf request,sem_t *mtx_file){
 
+    (*shm_temp)->fd=-1;
+    (*shm_temp)->dimension=-1;
+    (*shm_temp)->filename=NULL;
+    (*shm_temp)->list=NULL;
+    (*shm_temp)->byte_readed=0;
+    (*shm_temp)->byte_written=0;
+    (*shm_temp)->byte_sent=0;
+    (*shm_temp)->addr.dest_addr=request.addr;
+    (*shm_temp)->pkt_fly=0;
+    (*shm_temp)->mtx_file=mtx_file;
+    (*shm_temp)->window_base_rcv=0;
+    (*shm_temp)->window_base_snd=0;
+    (*shm_temp)->win_buf_snd=0;
+    (*shm_temp)->seq_to_send=0;
+    (*shm_temp)->addr.len=sizeof(request.addr);
+    (*shm_temp)->param.window=param_serv.window;//primo pacchetto della finestra->primo non riscontrato
+}
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg dalla coda di richieste e soddisfo il cmd
     
     struct sockaddr_in serv_addr;
@@ -48,7 +67,9 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
     //Inizializzo la struttura per la gestione del sel_repeat
     initialize_mtx(&(shm->mtx));
     initialize_cond(&(shm->list_not_empty));
-    shm->fd=-1;
+
+    fillUp_shm(&shm,request,mtx_file);
+   /* shm->fd=-1;
     shm->dimension=-1;
     shm->filename=NULL;
     shm->list=NULL;
@@ -63,7 +84,7 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
     shm->win_buf_snd=0;
     shm->seq_to_send=0;
     shm->addr.len=sizeof(request.addr);
-    shm->param.window=param_serv.window;//primo pacchetto della finestra->primo non riscontrato
+    shm->param.window=param_serv.window;//primo pacchetto della finestra->primo non riscontrato */
     
     if(param_serv.timer_ms !=0 ) {
         shm->param.timer_ms = param_serv.timer_ms;
