@@ -25,14 +25,14 @@ ssize_t write_nbytes(int fd, void *buf, size_t n){//scrive n byte su un file
     return(n-nleft);
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-ssize_t readn(int fd,void *buf, size_t n){//legge n byte da un file
+ssize_t read_nbytes(int fd,void *buf, size_t n){//legge n byte da un file
     size_t nleft;
     ssize_t nread;
     char *ptr;
     ptr = buf;
     nleft = n;
     if(buf==NULL){
-        handle_error_with_exit("error in readn buf is NULL\n");
+        handle_error_with_exit("error in read_nbytes buf is NULL\n");
     }
     while (nleft > 0) {
         if ((nread = read(fd, ptr, nleft)) <= 0) {

@@ -204,13 +204,13 @@ void send_data_in_window(struct temp_buffer temp_buff,struct shm_sel_repeat *shm
     
     //leggo cosa inviare 
     if ((shm->dimension - (shm->byte_sent)) < (int)(MAXPKTSIZE - OVERHEAD)) {//byte mancanti da inviare
-        readed = readn(shm->fd, temp_buff.payload, (size_t) (shm->dimension - (shm->byte_sent)));
+        readed = read_nbytes(shm->fd, temp_buff.payload, (size_t) (shm->dimension - (shm->byte_sent)));
         if (readed < shm->dimension - (shm->byte_sent)) {
             handle_error_with_exit("error in read 2\n");
         }
         shm->byte_sent += (shm->dimension - (shm->byte_sent));
     } else {
-        readed = readn(shm->fd, temp_buff.payload, (MAXPKTSIZE - OVERHEAD));
+        readed = read_nbytes(shm->fd, temp_buff.payload, (MAXPKTSIZE - OVERHEAD));
         if (readed < (int)(MAXPKTSIZE - OVERHEAD)) {
             handle_error_with_exit("error in read 3\n");
         }
