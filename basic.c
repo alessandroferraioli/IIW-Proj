@@ -104,6 +104,7 @@ void better_strcpy(char*buf1,char*buf2){//strcpy+controllo buffer + stampa event
     strcpy(buf1,buf2);
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void better_strncpy(char*buf1,char*buf2,int lenght){//strncpy+controllo buffer + stampa errori
     if(buf1==NULL){
         handle_error_with_exit("error better strcpy buf1 is NULL\n");
@@ -114,6 +115,7 @@ void better_strncpy(char*buf1,char*buf2,int lenght){//strncpy+controllo buffer +
     strncpy(buf1,buf2,lenght);
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void better_strcat(char*str1,char*str2){//strcat+controllo buffer + stampa errori
     if(str1==NULL){
         handle_error_with_exit("error better strcat str1 is NULL\n");
@@ -362,7 +364,7 @@ char* generate_multi_copy(char*path_to_filename,char*filename){//ritorna path as
     if(absolute_path==NULL){
         handle_error_with_exit("error in generate full path\n");
     }
-    if(!check_if_file_exist(absolute_path)){
+    if(!file_exist(absolute_path)){
         return absolute_path;
     }
     first_of_the_dot=malloc(sizeof(char)*(strlen(filename)+12));;//5==terminatore+ "_" + +10 cifre per il numero
@@ -385,7 +387,7 @@ char* generate_multi_copy(char*path_to_filename,char*filename){//ritorna path as
     if(absolute_path==NULL){
         handle_error_with_exit("error in generate full path\n");
     }
-    while(check_if_file_exist(absolute_path)){
+    while(file_exist(absolute_path)){
         copy_number+=1;
         if(copy_number>=UINT32_MAX){
             return NULL;
@@ -523,9 +525,9 @@ char*make_list(char*path){//ritorna la lista di file presenti in path
     return list;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-char check_if_file_exist(char*path){//verifica che il file esiste in memoria
+char file_exist(char*path){//verifica che il file esiste in memoria
     if(path==NULL){
-        handle_error_with_exit("error in check_if_file_exist\n");
+        handle_error_with_exit("error in file_exist\n");
     }
     if(access(path,F_OK)!=-1){
         return 1;

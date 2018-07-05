@@ -526,7 +526,7 @@ int main(int argc, char *argv[]) {//funzione principale client concorrente
             move_pointer(&path, path_len);
             better_strcpy(path, filename);
             path = path - path_len;
-            if (!check_if_file_exist(path)) {
+            if (!file_exist(path)) {
                 printf(RED"File %s not exist\n"RESET,path);
                 continue;
             } else {

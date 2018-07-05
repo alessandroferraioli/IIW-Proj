@@ -91,7 +91,7 @@ void wait_for_start_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm
     }
 
     //ottieni la dimensione del file da inviare e inseriscila insieme all'MD5 dentro il pacchetto da inviare al client
-    if (check_if_file_exist(path)) {
+    if (file_exist(path)) {
         shm->dimension = get_file_size(path);
         sprintf(dim_string, "%ld", shm->dimension);
         shm->fd = open(path, O_RDONLY);

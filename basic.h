@@ -155,7 +155,7 @@ struct node  {//struttura di un nodo della lista dinamica ordianta,la lista tien
 #endif
 
 void handle_error_with_exit(char*errorString);
-char check_if_file_exist(char*path);
+char file_exist(char*path);
 long get_file_size(char*path);
 char count_words_into_line(char*line);
 void lock_sem(sem_t*sem);

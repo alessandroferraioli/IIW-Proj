@@ -21,10 +21,10 @@ void timeout_handler_serv(int sig, siginfo_t *si, void *uc){//gestione del segna
     great_alarm_serv=1;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void initialize_mtx_prefork(struct mtx_prefork*mtx_prefork){//inizializza memoria condivisa contentente semaforo
+void setup_mtx_prefork(struct mtx_prefork*mtx_prefork){//inizializza memoria condivisa contentente semaforo
     //impostando numero di processi liberi a 0
     if(mtx_prefork==NULL){
-        handle_error_with_exit("error in initialize_mtx_prefork\n");
+        handle_error_with_exit("error in setup_mtx_prefork\n");
     }
     if(sem_init(&(mtx_prefork->sem),1,1)==-1){
         handle_error_with_exit("error in sem_init\n");
@@ -412,7 +412,7 @@ int main(int argc,char*argv[]) {//funzione principale processo server
 
     initialize_sem(mtx_queue);//inizializza memoria condivisa
     initialize_sem(mtx_file);
-    initialize_mtx_prefork(mtx_prefork);//inizializza memoria condivisa[uguale a sopra solo che metto gia a 0 la variabile free_process]
+    setup_mtx_prefork(mtx_prefork);//inizializza memoria condivisa[uguale a sopra solo che metto gia a 0 la variabile free_process]
 
     //inizializza socket processo principale
     memset((void *)&addr, 0, sizeof(addr));
