@@ -410,14 +410,14 @@ void rcv_data_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_rep
 
             //per ogni elemento della finestra ricevuto 
             if (shm->dimension - shm->byte_written >= (int)(MAXPKTSIZE - OVERHEAD)) {
-                written = (int) writen(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (MAXPKTSIZE - OVERHEAD));
+                written = (int) write_nbytes(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (MAXPKTSIZE - OVERHEAD));
                 if (written < (int)(MAXPKTSIZE - OVERHEAD)) {
                     handle_error_with_exit("error in write\n");
                 }
                 //aggiorno quanto ho scritto
                 shm->byte_written += (MAXPKTSIZE - OVERHEAD);
             } else {//se ho gia finito di scrivere sul file tutta l dim della finestra che mi permettava
-                written = (int) writen(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (size_t) shm->dimension - shm->byte_written);//finisco di scrivere
+                written = (int) write_nbytes(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (size_t) shm->dimension - shm->byte_written);//finisco di scrivere
                 if (written < shm->dimension - shm->byte_written) {
                     handle_error_with_exit("error in write\n");
                 }
@@ -473,13 +473,13 @@ void rcv_msg_send_ack_in_window(struct temp_buffer temp_buff,struct shm_sel_repe
         while (shm->win_buf_rcv[shm->window_base_rcv].received == 1) {//finhe ne trovo di riscontrati nella finestra vado a avanti a scorrere
             if (shm->win_buf_rcv[shm->window_base_rcv].command == DATA) {//DATA == 0 
                 if (shm->dimension - shm->byte_written >= (int)(MAXPKTSIZE - OVERHEAD)) {
-                    written = (int) writen(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (MAXPKTSIZE - OVERHEAD));//Scrivo n byte sul pkt ( sul file) se ho abbastanza spazio(vedi if su)
+                    written = (int) write_nbytes(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (MAXPKTSIZE - OVERHEAD));//Scrivo n byte sul pkt ( sul file) se ho abbastanza spazio(vedi if su)
                     if (written < (int)(MAXPKTSIZE - OVERHEAD)) {
                         handle_error_with_exit("error in write\n");
                     }
                     shm->byte_written += (MAXPKTSIZE - OVERHEAD);
                 } else {
-                    written = (int) writen(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (size_t) shm->dimension - shm->byte_written);
+                    written = (int) write_nbytes(shm->fd, shm->win_buf_rcv[shm->window_base_rcv].payload, (size_t) shm->dimension - shm->byte_written);
                     if (written < shm->dimension - shm->byte_written) {
                         handle_error_with_exit("error in write\n");
                     }

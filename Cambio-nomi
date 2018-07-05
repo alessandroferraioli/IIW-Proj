@@ -47,6 +47,7 @@ wait_for_fin_put-->wait_put_fin[put_server.c]
 
 
 check_if_file_exist-->file_exist[basic.c]
+writen-->write_nbytes[manage_io.c]
 
 
 
