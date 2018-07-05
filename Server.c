@@ -48,9 +48,52 @@ void setup_timer(struct shm_sel_repeat **shm_temp){
 
 
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+void allocate_memory_payload(struct shm_sel_repeat **shm){
+    for (int i = 0; i < 2 *(param_serv.window); i++) {//alloco memoria per i payload di ogni buffer
+        
+        (*shm)->win_buf_snd[i].payload =malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
+        if((*shm)->win_buf_snd[i].payload==NULL){
+            handle_error_with_exit("error in malloc\n");
+        }
+        
+        memset((*shm)->win_buf_snd[i].payload,'\0',MAXPKTSIZE-OVERHEAD+1);//setto a zero
+        (*shm)->win_buf_rcv[i].payload=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
+        if((*shm)->win_buf_rcv[i].payload==NULL){
+            handle_error_with_exit("error in malloc\n");
+        }
+        
+        memset((*shm)->win_buf_rcv[i].payload,'\0',MAXPKTSIZE-OVERHEAD+1);
+        (*shm)->win_buf_snd[i].lap = -1;
+        (*shm)->win_buf_snd[i].acked=2;//li metto a 2-->sono pkt vuoti
+        (*shm)->win_buf_rcv[i].lap = -1;
+    }
+
+
+
+
+
+}
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+void allocate_memory_shm(struct shm_sel_repeat **shm){
+  (*shm)->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*(param_serv.window)));
+    if((*shm)->win_buf_rcv==NULL){
+        handle_error_with_exit("error in malloc win buf rcv\n");
+    }
 
+    //alloco memoria buffer di invio
+    (*shm)->win_buf_snd=malloc(sizeof(struct window_snd_buf)*(2*(param_serv.window)));
+    if((*shm)->win_buf_snd==NULL){
+        handle_error_with_exit("error in malloc win buf snd\n");
+    }
+    
+    memset((*shm)->win_buf_rcv,0,sizeof(struct window_rcv_buf)*(2*(param_serv.window)));//inizializza a zero
+    memset((*shm)->win_buf_snd,0,sizeof(struct window_snd_buf)*(2*(param_serv.window)));//inizializza a zero
+
+    allocate_memory_payload(shm);
+}
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void fillUp_shm(struct shm_sel_repeat **shm_temp,struct msgbuf request,sem_t *mtx_file){
 
     (*shm_temp)->fd=-1;
@@ -94,75 +137,9 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
     initialize_cond(&(shm->list_not_empty));
 
     fillUp_shm(&shm,request,mtx_file);
-   /* shm->fd=-1;
-    shm->dimension=-1;
-    shm->filename=NULL;
-    shm->list=NULL;
-    shm->byte_readed=0;
-    shm->byte_written=0;
-    shm->byte_sent=0;
-    shm->addr.dest_addr=request.addr;
-    shm->pkt_fly=0;
-    shm->mtx_file=mtx_file;
-    shm->window_base_rcv=0;
-    shm->window_base_snd=0;
-    shm->win_buf_snd=0;
-    shm->seq_to_send=0;
-    shm->addr.len=sizeof(request.addr);
-    shm->param.window=param_serv.window;//primo pacchetto della finestra->primo non riscontrato */
 
-  /*  setup_timer(param_serv, &shm);
+    allocate_memory_shm(&shm);
     
-    if(param_serv.timer_ms !=0 ) {
-        shm->param.timer_ms = param_serv.timer_ms;
-        shm->adaptive = 0;
-    }
-    else{
-        shm->param.timer_ms = TIMER_BASE_ADAPTIVE;
-        shm->adaptive = 1;
-        shm->dev_RTT_ms=0;
-        shm->est_RTT_ms=TIMER_BASE_ADAPTIVE;
-    }  */
-
-    shm->param.loss_prob=param_serv.loss_prob;
-    shm->head=NULL;
-    shm->tail=NULL;
-    
-    //alloco memoria buffer ricezione
-    shm->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*(param_serv.window)));
-    if(shm->win_buf_rcv==NULL){
-        handle_error_with_exit("error in malloc win buf rcv\n");
-    }
-
-    //alloco memoria buffer di invio
-    shm->win_buf_snd=malloc(sizeof(struct window_snd_buf)*(2*(param_serv.window)));
-    if(shm->win_buf_snd==NULL){
-        handle_error_with_exit("error in malloc win buf snd\n");
-    }
-    
-    memset(shm->win_buf_rcv,0,sizeof(struct window_rcv_buf)*(2*(param_serv.window)));//inizializza a zero
-    memset(shm->win_buf_snd,0,sizeof(struct window_snd_buf)*(2*(param_serv.window)));//inizializza a zero
-
-    for (int i = 0; i < 2 *(param_serv.window); i++) {//alloco memoria per i payload di ogni buffer
-        
-        shm->win_buf_snd[i].payload =malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
-        if(shm->win_buf_snd[i].payload==NULL){
-            handle_error_with_exit("error in malloc\n");
-        }
-        
-        memset(shm->win_buf_snd[i].payload,'\0',MAXPKTSIZE-OVERHEAD+1);//setto a zero
-        shm->win_buf_rcv[i].payload=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
-        if(shm->win_buf_rcv[i].payload==NULL){
-            handle_error_with_exit("error in malloc\n");
-        }
-        
-        memset(shm->win_buf_rcv[i].payload,'\0',MAXPKTSIZE-OVERHEAD+1);
-        shm->win_buf_snd[i].lap = -1;
-        shm->win_buf_snd[i].acked=2;//li metto a 2-->sono pkt vuoti
-        shm->win_buf_rcv[i].lap = -1;
-    }
-
-
     memset((void *)&serv_addr, 0, sizeof(serv_addr));//inizializzo socket del processo ad ogni nuova richiesta-->riduco la prob di avere problemi di socket(le assegna il SO)
     serv_addr.sin_family=AF_INET;
     serv_addr.sin_port=htons(0);
