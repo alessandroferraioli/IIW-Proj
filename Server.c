@@ -141,11 +141,11 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
         //in base al comando ricevuto il processo figlio server esegue uno dei 3 comandi
        
         if(temp_buff.command==LIST){
-            execute_list(temp_buff,shm);
+            exe_list(temp_buff,shm);
         }
         else if(temp_buff.command==PUT){
             set_max_buff_rcv_size(shm->addr.sockfd);//lo metto al massimo possibile(in basic.h) senza privilegi root
-            execute_put(temp_buff,shm);
+            exe_put(temp_buff,shm);
             if(close(shm->addr.sockfd)==-1){
                 handle_error_with_exit("error in close socket child process\n");
             }

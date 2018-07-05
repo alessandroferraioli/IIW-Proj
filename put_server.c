@@ -189,7 +189,7 @@ void put_server(struct shm_sel_repeat *shm) {   //crea i 2 thread:
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //ricevuto pacchetto con put dimensione e filename
-void execute_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
+void exe_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     //verifica prima che il file esiste(con filename dentro temp_buffer)
     //manda start e si mette in ricezione del file,
     char *path, *first, *payload;

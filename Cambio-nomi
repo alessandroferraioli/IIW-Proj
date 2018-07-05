@@ -15,16 +15,37 @@ timer.h-->timer_functions.h
 --------------------------------------------------------------------------------------------------
 FUNZIONI
 
+
+
+		SERVER
+
 create_pool-->make_pool_process [Server.c]
 create_thread_pool_handler-->make_pool_handler[Server.c]
 reply_to_syn_and_execute_command-->reply_syn_exe_cmd[Server.c]
 initialize_mtx_prefork-->setup_mtx_prefork[Server.c]
 
+execute_get-->exe_get[get_server.c]
+
+execute_list-->exe_list[list_server.c]
+
+execute_put-->exe_put[put_server.c]
+
+
+
+	CLIENT
+
+
+
+
+
+
+	COMUNI
+
 
 check_if_file_exist-->file_exist[basic.c]
 
 
-execute_get-->exe_get[get_server.c]
+
 
 
 -------------------------------------------------------------------------------------------

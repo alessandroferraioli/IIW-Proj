@@ -191,7 +191,7 @@ void list_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
     return;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void execute_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
+void exe_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     //verifica che il file (con filename scritto dentro temp_buffer esiste)
     // ,manda la dimensione, aspetta lo start e inizia a mandare il file,
     // temp_buff contiene il pacchetto con comando get+filename
