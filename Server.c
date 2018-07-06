@@ -233,32 +233,7 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
         //in base al comando ricevuto il processo figlio server esegue uno dei 3 comandi
 
         select_functions(temp_buff,shm);
-       
-   /*     if(temp_buff.command==LIST){
-            exe_list(temp_buff,shm);
-        }
-        else if(temp_buff.command==PUT){
-            set_max_buff_rcv_size(shm->addr.sockfd);//lo metto al massimo possibile(in basic.h) senza privilegi root
-            exe_put(temp_buff,shm);
-            if(close(shm->addr.sockfd)==-1){
-                handle_error_with_exit("error in close socket child process\n");
-            }
-        }
-        else if(temp_buff.command==GET){
-            exe_get(temp_buff,shm);
-            if(close(shm->addr.sockfd)==-1){
-                handle_error_with_exit("error in close socket child process\n");
-            }
-        }
-        else if(temp_buff.command==SYN_ACK || temp_buff.command==SYN){
-            printf("pacchetto di connessione ricevuto e ignorato\n");
-        }
-        else{
-            printf("invalid_command\n");
-            if(close(shm->addr.sockfd)==-1){
-                handle_error_with_exit("error in close socket child process\n");
-            }
-        }   */
+
     }
     else if(errno!=EINTR && errno!=0){
         handle_error_with_exit("error in send_syn_ack recvfrom\n");
@@ -412,7 +387,32 @@ void make_pool_handler(struct mtx_prefork*mtx_prefork){
     block_signal(SIGALRM);
     return;
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+void get_parameter(struct select_param *param_serv,char *line)
+{
+
+
+
+
+    if(param_serv->window<1){
+        handle_error_with_exit("window must be greater than 0\n");
+    }
+    skip_space(&line);
+
+    //prendo la prob di perdita 
+    param_serv->loss_prob=parse_double_and_move(&line);
+    if(param_serv->loss_prob<0 || param_serv->loss_prob>100){
+        handle_error_with_exit("invalid loss prob\n");
+    }
+    skip_space(&line);
+
+    //Prendo il time out(sia adattivo che fissato)
+    param_serv->timer_ms=parse_integer_and_move(&line);
+    if(param_serv->timer_ms<0){
+        handle_error_with_exit("timer must be positive or 0\n");
+    }
+}
 
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -461,26 +461,12 @@ int main(int argc,char*argv[]) {//funzione principale processo server
         handle_error_with_exit("error in read line\n");
     }
 
+
     //Il primo valore che leggo e' la grandezza della dim della finestra
     param_serv.window=parse_integer_and_move(&line);//inizializza parametri di esecuzione
 
-    if(param_serv.window<1){
-        handle_error_with_exit("window must be greater than 0\n");
-    }
-    skip_space(&line);
+    get_parameter(&param_serv,line);
 
-    //prendo la prob di perdita 
-    param_serv.loss_prob=parse_double_and_move(&line);
-    if(param_serv.loss_prob<0 || param_serv.loss_prob>100){
-        handle_error_with_exit("invalid loss prob\n");
-    }
-    skip_space(&line);
-
-    //Prendo il time out(sia adattivo che fissato)
-    param_serv.timer_ms=parse_integer_and_move(&line);
-    if(param_serv.timer_ms<0){
-        handle_error_with_exit("timer must be positive or 0\n");
-    }
     if(close(fd)==-1){
         handle_error_with_exit("error in close file\n");
     }
