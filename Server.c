@@ -143,6 +143,24 @@ void free_memory_shm(struct shm_sel_repeat **shm){
 
 
 }
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+void fillUp_socket(struct sockaddr_in *serv_addr,struct shm_sel_repeat **shm){
+
+
+    serv_addr->sin_family=AF_INET;
+    serv_addr->sin_port=htons(0);
+    serv_addr->sin_addr.s_addr=htonl(INADDR_ANY);
+
+    if (((*shm)->addr.sockfd= socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        handle_error_with_exit("error in socket create\n");
+    }
+    if (bind((*shm)->addr.sockfd, (struct sockaddr *)(serv_addr), sizeof(*serv_addr)) < 0) {//bind con una porta scelta automataticam. dal SO
+        handle_error_with_exit("error in bind\n");
+    }
+
+
+}
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg dalla coda di richieste e soddisfo il cmd
@@ -165,7 +183,8 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
     allocate_memory_shm(&shm);
     
     memset((void *)&serv_addr, 0, sizeof(serv_addr));//inizializzo socket del processo ad ogni nuova richiesta-->riduco la prob di avere problemi di socket(le assegna il SO)
-    serv_addr.sin_family=AF_INET;
+    fillUp_socket(&serv_addr,&shm);
+   /* serv_addr.sin_family=AF_INET;
     serv_addr.sin_port=htons(0);
     serv_addr.sin_addr.s_addr=htonl(INADDR_ANY);
 
@@ -174,7 +193,7 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
     }
     if (bind(shm->addr.sockfd, (struct sockaddr *)&(serv_addr), sizeof(serv_addr)) < 0) {//bind con una porta scelta automataticam. dal SO
         handle_error_with_exit("error in bind\n");
-    }
+    } */
 
     //manda syn ack dopo aver ricevuto il syn(richiesta ricevuta) e aspetta il comando del client
     send_syn_ack(shm->addr.sockfd, &request.addr, sizeof(request.addr),param_serv.loss_prob );
@@ -303,12 +322,9 @@ void child_job() {//lavoro che svolge il processo.
     return;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void make_pool_process(int num_child){//crea il pool di processi.
-// Ogni processo ha il compito di gestire le richieste
+void make_child(int num_child){
+    
     int pid;
-    if(num_child<0){
-        handle_error_with_exit("num_child must be greater than 0\n");
-    }
     for(int i=0;i<num_child;i++) {
         if ((pid = fork()) == -1) {
             handle_error_with_exit("error in fork\n");
@@ -317,6 +333,17 @@ void make_pool_process(int num_child){//crea il pool di processi.
             child_job();//i figli non ritorna mai
         }
     }
+
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+void make_pool_process(int num_child){//crea il pool di processi.
+// Ogni processo ha il compito di gestire le richieste
+    if(num_child<0){
+        handle_error_with_exit("num_child must be greater than 0\n");
+    }
+
+    make_child(num_child);
     return;//il padre ritorna dopo aver creato i processi
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
