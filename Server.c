@@ -145,68 +145,9 @@ void free_memory_shm(struct shm_sel_repeat **shm){
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void fillUp_socket(struct sockaddr_in *serv_addr,struct shm_sel_repeat **shm){
+void select_functions(struct temp_buffer temp_buff , struct shm_sel_repeat *shm){
 
-
-    serv_addr->sin_family=AF_INET;
-    serv_addr->sin_port=htons(0);
-    serv_addr->sin_addr.s_addr=htonl(INADDR_ANY);
-
-    if (((*shm)->addr.sockfd= socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        handle_error_with_exit("error in socket create\n");
-    }
-    if (bind((*shm)->addr.sockfd, (struct sockaddr *)(serv_addr), sizeof(*serv_addr)) < 0) {//bind con una porta scelta automataticam. dal SO
-        handle_error_with_exit("error in bind\n");
-    }
-
-
-}
-
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg dalla coda di richieste e soddisfo il cmd
-    
-    struct sockaddr_in serv_addr;
-    struct temp_buffer temp_buff;//pacchetto da inviare
-   
-    struct shm_sel_repeat *shm=malloc(sizeof(struct shm_sel_repeat));
-
-    if(shm==NULL){
-        handle_error_with_exit("error in malloc\n");
-    }
-
-    //Inizializzo la struttura per la gestione del sel_repeat
-    initialize_mtx(&(shm->mtx));
-    initialize_cond(&(shm->list_not_empty));
-
-    fillUp_shm(&shm,request,mtx_file);
-
-    allocate_memory_shm(&shm);
-    
-    memset((void *)&serv_addr, 0, sizeof(serv_addr));//inizializzo socket del processo ad ogni nuova richiesta-->riduco la prob di avere problemi di socket(le assegna il SO)
-    fillUp_socket(&serv_addr,&shm);
-   /* serv_addr.sin_family=AF_INET;
-    serv_addr.sin_port=htons(0);
-    serv_addr.sin_addr.s_addr=htonl(INADDR_ANY);
-
-    if ((shm->addr.sockfd= socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        handle_error_with_exit("error in socket create\n");
-    }
-    if (bind(shm->addr.sockfd, (struct sockaddr *)&(serv_addr), sizeof(serv_addr)) < 0) {//bind con una porta scelta automataticam. dal SO
-        handle_error_with_exit("error in bind\n");
-    } */
-
-    //manda syn ack dopo aver ricevuto il syn(richiesta ricevuta) e aspetta il comando del client
-    send_syn_ack(shm->addr.sockfd, &request.addr, sizeof(request.addr),param_serv.loss_prob );
-    alarm(TIMEOUT);     //La funzione alarm() invia al processo corrente il segnale SIGALRM dopo che siano trascorsi seconds secondi.
-                        //Per non farlo bloccare sulla recvfrom se non ricevuo nulla 
-    if(recvfrom(shm->addr.sockfd,&temp_buff,MAXPKTSIZE,0,(struct sockaddr *)&(shm->addr.dest_addr),&(shm->addr.len))!=-1){  //ricevi il comando del client in finestra
-                                                                                                                            //bloccati finquando non ricevi il comando dal client(almeno che non scada il TIMEOUT)
-        alarm(0);//ricevuto il cmd-->metto a 0 il timeout non mi serve piu
-        print_rcv_message(temp_buff);
-        printf(GREEN"connection established\n"RESET);
-        great_alarm_serv=0; //Lo disattivo ( attivato ad 1 nell handler del timeout)
-        
-        //in base al comando ricevuto il processo figlio server esegue uno dei 3 comandi
+    //in base al comando ricevuto il processo figlio server esegue uno dei 3 comandi
        
         if(temp_buff.command==LIST){
             exe_list(temp_buff,shm);
@@ -233,6 +174,91 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
                 handle_error_with_exit("error in close socket child process\n");
             }
         }
+
+
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+void fillUp_socket(struct sockaddr_in *serv_addr,struct shm_sel_repeat **shm){
+
+
+    serv_addr->sin_family=AF_INET;
+    serv_addr->sin_port=htons(0);
+    serv_addr->sin_addr.s_addr=htonl(INADDR_ANY);
+
+    if (((*shm)->addr.sockfd= socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        handle_error_with_exit("error in socket create\n");
+    }
+    if (bind((*shm)->addr.sockfd, (struct sockaddr *)(serv_addr), sizeof(*serv_addr)) < 0) {//bind con una porta scelta automataticam. dal SO
+        handle_error_with_exit("error in bind\n");
+    }
+
+
+}
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg dalla coda di richieste e soddisfo il cmd
+    
+    struct sockaddr_in serv_addr;
+    struct temp_buffer temp_buff;//pacchetto da inviare
+   
+    struct shm_sel_repeat *shm=malloc(sizeof(struct shm_sel_repeat));
+
+    if(shm==NULL){
+        handle_error_with_exit("error in malloc\n");
+    }
+
+    //Inizializzo la struttura per la gestione del sel_repeat
+    initialize_mtx(&(shm->mtx));
+    initialize_cond(&(shm->list_not_empty));
+
+    fillUp_shm(&shm,request,mtx_file);
+
+    allocate_memory_shm(&shm);
+    
+    memset((void *)&serv_addr, 0, sizeof(serv_addr));//inizializzo socket del processo ad ogni nuova richiesta-->riduco la prob di avere problemi di socket(le assegna il SO)
+    fillUp_socket(&serv_addr,&shm);
+
+    //manda syn ack dopo aver ricevuto il syn(richiesta ricevuta) e aspetta il comando del client
+    send_syn_ack(shm->addr.sockfd, &request.addr, sizeof(request.addr),param_serv.loss_prob );
+    alarm(TIMEOUT);     //La funzione alarm() invia al processo corrente il segnale SIGALRM dopo che siano trascorsi seconds secondi.
+                        //Per non farlo bloccare sulla recvfrom se non ricevuo nulla 
+    if(recvfrom(shm->addr.sockfd,&temp_buff,MAXPKTSIZE,0,(struct sockaddr *)&(shm->addr.dest_addr),&(shm->addr.len))!=-1){  //ricevi il comando del client in finestra
+                                                                                                                            //bloccati finquando non ricevi il comando dal client(almeno che non scada il TIMEOUT)
+        alarm(0);//ricevuto il cmd-->metto a 0 il timeout non mi serve piu
+        print_rcv_message(temp_buff);
+        printf(GREEN"connection established\n"RESET);
+        great_alarm_serv=0; //Lo disattivo ( attivato ad 1 nell handler del timeout)
+        
+        //in base al comando ricevuto il processo figlio server esegue uno dei 3 comandi
+
+        select_functions(temp_buff,shm);
+       
+   /*     if(temp_buff.command==LIST){
+            exe_list(temp_buff,shm);
+        }
+        else if(temp_buff.command==PUT){
+            set_max_buff_rcv_size(shm->addr.sockfd);//lo metto al massimo possibile(in basic.h) senza privilegi root
+            exe_put(temp_buff,shm);
+            if(close(shm->addr.sockfd)==-1){
+                handle_error_with_exit("error in close socket child process\n");
+            }
+        }
+        else if(temp_buff.command==GET){
+            exe_get(temp_buff,shm);
+            if(close(shm->addr.sockfd)==-1){
+                handle_error_with_exit("error in close socket child process\n");
+            }
+        }
+        else if(temp_buff.command==SYN_ACK || temp_buff.command==SYN){
+            printf("pacchetto di connessione ricevuto e ignorato\n");
+        }
+        else{
+            printf("invalid_command\n");
+            if(close(shm->addr.sockfd)==-1){
+                handle_error_with_exit("error in close socket child process\n");
+            }
+        }   */
     }
     else if(errno!=EINTR && errno!=0){
         handle_error_with_exit("error in send_syn_ack recvfrom\n");
