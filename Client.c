@@ -21,6 +21,24 @@ void timeout_handler_client(int sig, siginfo_t *si, void *uc){//signal handler d
     return;
 }
 
+void free_shm(struct shm_sel_repeat *shm){
+    
+    for (int i = 0; i < 2 *(param_client.window); i++) {
+        free(shm->win_buf_snd[i].payload);
+        shm->win_buf_snd[i].payload=NULL;
+        free(shm->win_buf_rcv[i].payload);
+        shm->win_buf_rcv[i].payload=NULL;
+    }
+    
+    free(shm->win_buf_rcv);
+    free(shm->win_buf_snd);
+    shm->win_buf_rcv=NULL;
+    shm->win_buf_snd=NULL;
+    free(shm);
+    shm=NULL;
+
+}
+
 void initialize_shm(struct shm_sel_repeat *shm, int sockfd, struct sockaddr_in serv_addr ){
  
 
@@ -105,7 +123,7 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
     shm->dimension=-1;
     shm->filename=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD)); 
     if(shm->filename==NULL){
-        handle_error_with_exit("error in malloc\n");
+        handle_error_with_exit("Error in malloc\n");
     }
     better_strcpy(shm->filename,filename);
     shm->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*param_client.window));
@@ -121,12 +139,12 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
     for (int i = 0; i < 2 *(param_client.window); i++) {
         shm->win_buf_snd[i].payload =malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
         if(shm->win_buf_snd[i].payload==NULL){
-            handle_error_with_exit("error in malloc\n");
+            handle_error_with_exit("Error in malloc\n");
         }
         memset(shm->win_buf_snd[i].payload,'\0',MAXPKTSIZE-OVERHEAD+1);
         shm->win_buf_rcv[i].payload=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
         if(shm->win_buf_rcv[i].payload==NULL){
-            handle_error_with_exit("error in malloc\n");
+            handle_error_with_exit("Error in malloc\n");
         }
         memset(shm->win_buf_rcv[i].payload,'\0',MAXPKTSIZE-OVERHEAD+1);
 
@@ -138,7 +156,7 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
     get_client(shm);
     byte_written=shm->byte_written;
     //libera memoria
-    for (int i = 0; i < 2 *(param_client.window); i++) {
+    /*for (int i = 0; i < 2 *(param_client.window); i++) {
         free(shm->win_buf_snd[i].payload);
         shm->win_buf_snd[i].payload=NULL;
         free(shm->win_buf_rcv[i].payload);
@@ -149,7 +167,11 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
     shm->win_buf_rcv=NULL;
     shm->win_buf_snd=NULL;
     free(shm);
-    shm=NULL;
+    shm=NULL;*/
+    free_shm(shm);
+
+
+
     return byte_written;
 }
 
@@ -223,7 +245,7 @@ long list_command(int sockfd, struct sockaddr_in serv_addr) {//svolgi la list co
     list_client(shm);
     byte_readed=shm->byte_readed;
     //libera memoria
-    for (int i = 0; i < 2 *(param_client.window); i++) {
+   /* for (int i = 0; i < 2 *(param_client.window); i++) {
         free(shm->win_buf_snd[i].payload);
         shm->win_buf_snd[i].payload=NULL;
         free(shm->win_buf_rcv[i].payload);
@@ -234,7 +256,8 @@ long list_command(int sockfd, struct sockaddr_in serv_addr) {//svolgi la list co
     shm->win_buf_rcv=NULL;
     shm->win_buf_snd=NULL;
     free(shm);
-    shm=NULL;
+    shm=NULL;*/
+    free_shm(shm);
     return byte_readed;
 }
 long put_command(int sockfd, struct sockaddr_in serv_addr, char *filename,long dimension,int fd) {//svolgi la put con connessione già instaurata
@@ -323,7 +346,7 @@ long put_command(int sockfd, struct sockaddr_in serv_addr, char *filename,long d
     put_client(shm);
     byte_readed=shm->byte_readed;
     //libera memoria
-    for (int i = 0; i < 2 *(param_client.window); i++) {
+    /*for (int i = 0; i < 2 *(param_client.window); i++) {
         free(shm->win_buf_snd[i].payload);
         shm->win_buf_snd[i].payload=NULL;
         free(shm->win_buf_rcv[i].payload);
@@ -334,7 +357,8 @@ long put_command(int sockfd, struct sockaddr_in serv_addr, char *filename,long d
     shm->win_buf_rcv=NULL;
     shm->win_buf_snd=NULL;
     free(shm);
-    shm=NULL;
+    shm=NULL;*/
+    free_shm(shm);
     return byte_readed;
 }
 
