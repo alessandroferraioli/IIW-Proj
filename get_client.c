@@ -63,7 +63,7 @@ int close_connection_get(struct temp_buffer temp_buff, struct shm_sel_repeat *sh
 //è stato ricevuto tutto il file aspetta il fin per chiudere la connessione
 int wait_for_fin_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
     char *path;
-    path = generate_full_pathname(shm->filename, dir_client);
+    path = generate_full_pathname(shm->filename, client_dir);
     if (path == NULL) {
         handle_error_with_exit("error in generate full pathname\n");
     }
@@ -195,7 +195,7 @@ int wait_for_get_dimension(struct temp_buffer temp_buff, struct shm_sel_repeat *
                 close_connection_get(temp_buff, shm);
             } else if (temp_buff.command == DIMENSION) {//se ricevi dimensione del file vai nello stato di rcv_file
                 lock_sem(shm->mtx_file);
-                path = generate_multi_copy(dir_client, shm->filename);
+                path = generate_multi_copy(client_dir, shm->filename);
                 if (path == NULL) {
                     handle_error_with_exit("error:there are too much copies of the file\n");
                 }

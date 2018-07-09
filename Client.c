@@ -9,9 +9,9 @@
 #include "put_client.h"
 #include "lock_functions.h"
 
-int great_alarm_client = 0;//se diventa 1 è scattato il timer globale
+int great_alarm_client = 0; //diventa 1 quando scatta il timer globale
 struct select_param param_client;
-char *dir_client;
+char *client_dir;
 
 void timeout_handler_client(int sig, siginfo_t *si, void *uc){//signal handler del timer globale
     (void)sig;
@@ -21,6 +21,44 @@ void timeout_handler_client(int sig, siginfo_t *si, void *uc){//signal handler d
     return;
 }
 
+void initialize_shm(struct shm_sel_repeat *shm, int sockfd, struct sockaddr_in serv_addr ){
+ 
+
+    initialize_mtx(&(shm->mtx));
+    initialize_cond(&(shm->list_not_empty));
+    shm->fd=-1; //DEVE ESSERE FUORI DALLA FUNZIONE
+    shm->byte_written=0;
+    shm->byte_sent=0;
+    shm->list=NULL;
+    shm->pkt_fly=0;
+    shm->byte_readed=0;
+    shm->window_base_rcv=0;
+    shm->window_base_snd=0;
+    shm->win_buf_snd=0;
+    shm->seq_to_send=0;
+    shm->param.window=param_client.window;
+    shm->param.loss_prob=param_client.loss_prob;
+    
+    if(param_client.timer_ms !=0 ) {
+        shm->param.timer_ms = param_client.timer_ms;
+        shm->adaptive = 0;
+    }
+
+    else{
+        shm->param.timer_ms = TIMER_BASE_ADAPTIVE;
+        shm->adaptive = 1;
+        shm->dev_RTT_ms=0;
+        shm->est_RTT_ms=TIMER_BASE_ADAPTIVE;
+    }
+    shm->addr.sockfd=sockfd;
+    shm->addr.dest_addr=serv_addr;
+    shm->dimension=-1;//DEVE ESSERE FATTO FUORI DALLA FUNZIONE
+    shm->filename=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD)); //DEVE ESSERE FATTO FUORI DALLA FUNZIONE
+    shm->addr.len=sizeof(serv_addr);
+    shm->head=NULL;
+    shm->tail=NULL;
+    
+}
 
 long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*mtx_file) {//svolgi la get con connessione già instaurata
     long byte_written=0;
@@ -32,10 +70,9 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
         handle_error_with_exit("error in malloc\n");
     }
     //inizializza memoria condivisa thread
-    initialize_mtx(&(shm->mtx));
+    initialize_shm(shm, sockfd, serv_addr);
+    /*initialize_mtx(&(shm->mtx));
     initialize_cond(&(shm->list_not_empty));
-    shm->mtx_file=mtx_file;
-    shm->fd=-1;
     shm->byte_written=0;
     shm->byte_sent=0;
     shm->list=NULL;
@@ -57,13 +94,16 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
         shm->dev_RTT_ms=0;
         shm->est_RTT_ms=TIMER_BASE_ADAPTIVE;
     }
+ 
     shm->addr.sockfd=sockfd;
     shm->addr.dest_addr=serv_addr;
-    shm->dimension=-1;
-    shm->filename=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD));
     shm->addr.len=sizeof(serv_addr);
     shm->head=NULL;
-    shm->tail=NULL;
+    shm->tail=NULL;*/
+    shm->mtx_file=mtx_file;
+    shm->fd=-1;
+    shm->dimension=-1;
+    shm->filename=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD)); 
     if(shm->filename==NULL){
         handle_error_with_exit("error in malloc\n");
     }
@@ -120,9 +160,10 @@ long list_command(int sockfd, struct sockaddr_in serv_addr) {//svolgi la list co
         handle_error_with_exit("error in malloc\n");
     }
     //inizializza memoria condivisa thread
-    initialize_mtx(&(shm->mtx));
+    initialize_shm(shm, sockfd, serv_addr);
+   /* initialize_mtx(&(shm->mtx));
     initialize_cond(&(shm->list_not_empty));
-    shm->fd=-1;
+
     shm->byte_written=0;
     shm->byte_sent=0;
     shm->list=NULL;
@@ -146,11 +187,12 @@ long list_command(int sockfd, struct sockaddr_in serv_addr) {//svolgi la list co
     }
     shm->addr.sockfd=sockfd;
     shm->addr.dest_addr=serv_addr;
-    shm->dimension=-1;
-    shm->filename=NULL;
     shm->addr.len=sizeof(serv_addr);
     shm->head=NULL;
-    shm->tail=NULL;
+    shm->tail=NULL;*/
+    shm->fd=-1;
+    shm->dimension=-1;
+    shm->filename=NULL;
     shm->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*param_client.window));
     if(shm->win_buf_rcv==NULL){
         handle_error_with_exit("error in malloc win buf rcv\n");
@@ -201,7 +243,7 @@ long put_command(int sockfd, struct sockaddr_in serv_addr, char *filename,long d
     if(filename==NULL){
         handle_error_with_exit("error in put command\n");
     }
-    path=generate_full_pathname(filename,dir_client);
+    path=generate_full_pathname(filename,client_dir);
     if(path==NULL){
         handle_error_with_exit("error in generate full path\n");
     }
@@ -210,9 +252,10 @@ long put_command(int sockfd, struct sockaddr_in serv_addr, char *filename,long d
         handle_error_with_exit("error in malloc\n");
     }
     //inizializza memoria condivisa thread
-    initialize_mtx(&(shm->mtx));
+    initialize_shm(shm, sockfd, serv_addr);
+    /*initialize_mtx(&(shm->mtx));
     initialize_cond(&(shm->list_not_empty));
-    shm->fd=fd;
+
     shm->byte_written=0;
     shm->byte_sent=0;
     shm->list=NULL;
@@ -236,11 +279,12 @@ long put_command(int sockfd, struct sockaddr_in serv_addr, char *filename,long d
     }
     shm->addr.sockfd=sockfd;
     shm->addr.dest_addr=serv_addr;
-    shm->dimension=dimension;
-    shm->filename=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD));
     shm->addr.len=sizeof(serv_addr);
     shm->head=NULL;
-    shm->tail=NULL;
+    shm->tail=NULL;*/
+    shm->fd=fd;
+    shm->dimension=dimension;
+    shm->filename=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD));
     if(shm->filename==NULL){
         handle_error_with_exit("error in malloc\n");
     }
@@ -391,7 +435,7 @@ void client_put_job(char *filename,long dimension) {//upload e filename già ver
     if(filename==NULL){
         handle_error_with_exit("error in client_put_job\n");
     }
-    path = generate_full_pathname(filename, dir_client);
+    path = generate_full_pathname(filename, client_dir);
     if(path==NULL){
         handle_error_with_exit("error in generate full path\n");
     }
@@ -468,7 +512,7 @@ int main(int argc, char *argv[]) {//funzione principale client concorrente
     srand(time(NULL));
     //verifica che il file parameter.txt esista
     check_if_dir_exist(argv[1]);
-    dir_client=add_slash_to_dir(argv[1]);
+    client_dir=add_slash_to_dir(argv[1]);
     better_strcpy(localname,"./parameter.txt");
     fd = open(localname, O_RDONLY);//apre il file parameter per leggere i parametri di input
     if (fd == -1) {
@@ -501,7 +545,7 @@ int main(int argc, char *argv[]) {//funzione principale client concorrente
     if (param_client.timer_ms < 0) {
         handle_error_with_exit("timer must be positive or zero\n");
     }
-    path_len = (int)strlen(dir_client);
+    path_len = (int)strlen(client_dir);
     if (close(fd) == -1) {
         handle_error_with_exit("error in close file\n");
     }
@@ -522,7 +566,7 @@ int main(int argc, char *argv[]) {//funzione principale client concorrente
         check_and_parse_command(command, filename);//inizializza command,filename e size
         if (!is_blank(filename) && (strncmp(command, "put",3) == 0)) {
             char *path = alloca(sizeof(char) * (strlen(filename) + path_len + 1));
-            better_strcpy(path, dir_client);
+            better_strcpy(path, client_dir);
             move_pointer(&path, path_len);
             better_strcpy(path, filename);
             path = path - path_len;
@@ -568,7 +612,7 @@ int main(int argc, char *argv[]) {//funzione principale client concorrente
             }
         }
         else if(strncmp(command,"local list",10) == 0){//comando local_list
-            my_list=make_list(dir_client);
+            my_list=make_list(client_dir);
             printf(GREEN "Local list:\n%s" RESET,my_list);
             free(my_list);
         }
