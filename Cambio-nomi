@@ -42,7 +42,7 @@ wait_for_fin_put-->wait_put_fin[put_server.c]
 	CLIENT
 
 dir_client -> client_dir [Client.c, Client.h, get_client.c]
-
+cliaddr -> client_addr [Client.c]
 
 
 

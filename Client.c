@@ -389,7 +389,7 @@ struct sockaddr_in send_syn_recv_ack(int sockfd, struct sockaddr_in main_servadd
             }
         }
         if(errno!=EINTR && errno!=0){
-            handle_error_with_exit("error in recvfrom send_syn\n");
+            handle_error_with_exit("Error in recvfrom send_syn\n");
         }
         rtx++;
     }
@@ -398,8 +398,9 @@ struct sockaddr_in send_syn_recv_ack(int sockfd, struct sockaddr_in main_servadd
     return main_servaddr;
 }
 
-void client_list_job() {//inizializza socket ricevi indirizzo del processo server figlio e inizia comando list
-    struct sockaddr_in serv_addr, cliaddr;
+void client_list_job() { //inizializza socket ricevi indirizzo del processo server figlio e inizia comando list
+
+    struct sockaddr_in serv_addr, client_addr;
     int sockfd;
 
     memset((void *) &serv_addr, 0, sizeof(serv_addr));//inizializza struct per contattare il server principale
@@ -409,12 +410,12 @@ void client_list_job() {//inizializza socket ricevi indirizzo del processo serve
         handle_error_with_exit("error in inet_pton\n");
     }
     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {//inizializza socket del client
-        handle_error_with_exit("error in socket\n");
+        handle_error_with_exit("Error in socket\n");
     }
-    memset((void *) &cliaddr, 0, sizeof(cliaddr));
-    cliaddr.sin_family = AF_INET;
-    cliaddr.sin_port = htons(0);
-    if (bind(sockfd, (struct sockaddr *) &cliaddr, sizeof(cliaddr)) < 0) {
+    memset((void *) &client_addr, 0, sizeof(client_addr));
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_port = htons(0);
+    if (bind(sockfd, (struct sockaddr *) &client_addr, sizeof(client_addr)) < 0) {
         handle_error_with_exit("error in bind\n");
     }
     set_max_buff_rcv_size(sockfd);
@@ -425,7 +426,7 @@ void client_list_job() {//inizializza socket ricevi indirizzo del processo serve
 }
 
 void client_get_job(char *filename,sem_t*mtx_file) {//inizializza socket ricevi indirizzo del processo server figlio e inizia comando get
-    struct sockaddr_in serv_addr, cliaddr;
+    struct sockaddr_in serv_addr, client_addr;
     int sockfd;
     if(filename==NULL){
         handle_error_with_exit("error in client_get_job\n");
@@ -440,10 +441,10 @@ void client_get_job(char *filename,sem_t*mtx_file) {//inizializza socket ricevi 
     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {//inizializza socket del client
         handle_error_with_exit("error in socket\n");
     }
-    memset((void *) &cliaddr, 0, sizeof(cliaddr));
-    cliaddr.sin_family = AF_INET;
-    cliaddr.sin_port = htons(0);
-    if (bind(sockfd, (struct sockaddr *) &cliaddr, sizeof(cliaddr)) < 0) {
+    memset((void *) &client_addr, 0, sizeof(client_addr));
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_port = htons(0);
+    if (bind(sockfd, (struct sockaddr *) &client_addr, sizeof(client_addr)) < 0) {
         handle_error_with_exit("error in bind\n");
     }
     set_max_buff_rcv_size(sockfd);
@@ -453,7 +454,7 @@ void client_get_job(char *filename,sem_t*mtx_file) {//inizializza socket ricevi 
     exit(EXIT_SUCCESS);
 }
 void client_put_job(char *filename,long dimension) {//upload e filename già verificato,inizializza socket ricevi indirizzo del processo server figlio e inizia comando put
-    struct sockaddr_in serv_addr, cliaddr;
+    struct sockaddr_in serv_addr, client_addr;
     char*path;
     int sockfd,fd,file_try_lock;
     if(filename==NULL){
@@ -489,10 +490,10 @@ void client_put_job(char *filename,long dimension) {//upload e filename già ver
     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {//inizializza socket del client
         handle_error_with_exit("error in socket\n");
     }
-    memset((void *) &cliaddr, 0, sizeof(cliaddr));
-    cliaddr.sin_family = AF_INET;
-    cliaddr.sin_port = htons(0);
-    if (bind(sockfd, (struct sockaddr *) &cliaddr, sizeof(cliaddr)) < 0) {
+    memset((void *) &client_addr, 0, sizeof(client_addr));
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_port = htons(0);
+    if (bind(sockfd, (struct sockaddr *) &client_addr, sizeof(client_addr)) < 0) {
         handle_error_with_exit("error in bind\n");
     }
 
