@@ -103,7 +103,8 @@ void fillUp_shm(struct sel_repeat **shm_temp,struct msgbuf request,sem_t *mtx_fi
     (*shm_temp)->dimension=-1;
     (*shm_temp)->filename=NULL;
     (*shm_temp)->list=NULL;
-    (*shm_temp)->byte_readed=0;
+    (*shm_temp)->byte_read
+=0;
     (*shm_temp)->byte_written=0;
     (*shm_temp)->byte_sent=0;
     (*shm_temp)->address

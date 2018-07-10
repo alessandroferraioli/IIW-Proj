@@ -124,7 +124,8 @@ struct sel_repeat{  //struttura condivisa tra i 2 thread necessaria sia per la s
     int window_base_snd;//sequenza di inizio finestra trasmissione (va da 0 a 2w-1)
     int seq_to_send;//prossimo numero di sequenza da dare al pacchetto (va da 0 a 2w-1)
     pthread_cond_t list_not_empty;//variabile condizione lista dinamica non vuota
-    long byte_readed;//byte letti e riscontrati lato sender
+    long byte_read
+;//byte letti e riscontrati lato sender
     long byte_written;//byte scritti e riscontrati lato receiver
     long byte_sent;//byte inviati con pacchetti senza contare quelli di ritrasmissione
     char*list;//puntatore alla lista dei file

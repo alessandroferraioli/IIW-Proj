@@ -52,7 +52,8 @@ void initialize_shm(struct sel_repeat *shm, int sockfd, struct sockaddr_in serv_
     shm->byte_sent=0;
     shm->list=NULL;
     shm->pkt_fly=0;
-    shm->byte_readed=0;
+    shm->byte_read
+=0;
     shm->window_base_rcv=0;
     shm->window_base_snd=0;
     shm->win_buf_snd=0;
@@ -151,7 +152,8 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
 
 long list_command(int sockfd, struct sockaddr_in serv_addr) { //svolgi la list con connessione già instaurata
     
-    long byte_readed=0;
+    long byte_read
+=0;
     struct sel_repeat *shm=malloc(sizeof(struct sel_repeat)); //alloca memoria condivisa thread
     if(shm==NULL){
         handle_error_with_exit("error in malloc\n");
@@ -202,17 +204,21 @@ long list_command(int sockfd, struct sockaddr_in serv_addr) { //svolgi la list c
     set_max_buff_rcv_size(shm->address
 .sockfd);
     list_client(shm);
-    byte_readed=shm->byte_readed;
+    byte_read
+=shm->byte_read
+;
     
     //libera memoria   
     free_shm(shm);
 
-    return byte_readed;
+    return byte_read
+;
 
 }
 
 long put_command(int sockfd, struct sockaddr_in serv_addr, char *filename,long dimension,int fd) { //svolgi la put con connessione già instaurata
-    long byte_readed=0;
+    long byte_read
+=0;
     char* path;
     if(filename==NULL){
         handle_error_with_exit("Error in 'put' command\n");
@@ -279,12 +285,15 @@ long put_command(int sockfd, struct sockaddr_in serv_addr, char *filename,long d
     }
 
     put_client(shm);
-    byte_readed=shm->byte_readed;
+    byte_read
+=shm->byte_read
+;
     
 	//libera memoria
     
     free_shm(shm);
-    return byte_readed;
+    return byte_read
+;
 
 }
 

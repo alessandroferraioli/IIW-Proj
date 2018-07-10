@@ -141,16 +141,20 @@ long send_put_file(struct sel_repeat *shm) {//invia file con protocollo selectiv
                 if (seq_is_in_window(shm->window_base_snd,shm->param.window, temp_buff.ack)) {//se è in finestra
                     if (temp_buff.command == DATA) {
                         rcv_ack_file_in_window(temp_buff, shm);
-                        if ((shm->byte_readed) ==(shm->dimension)) {
+                        if ((shm->byte_read
+) ==(shm->dimension)) {
                             close_put_send_file(shm);
-                            return shm->byte_readed;
+                            return shm->byte_read
+;
                         }
                     }
                     else{
                         rcv_ack_in_window(temp_buff, shm);
-                        if ((shm->byte_readed) ==(shm->dimension)) {
+                        if ((shm->byte_read
+) ==(shm->dimension)) {
                             close_put_send_file(shm);
-                            return shm->byte_readed;
+                            return shm->byte_read
+;
                         }
                     }
                 }

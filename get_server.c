@@ -48,7 +48,8 @@ void send_file( struct temp_buf temp_buff,struct sel_repeat *shm) {
                 if (seq_is_in_window(shm->window_base_snd, shm->param.window, temp_buff.ack)) {//se è in finestra
                     if (temp_buff.command == DATA) {
                         rcv_ack_file_in_window(temp_buff, shm);
-                        if (shm->byte_readed == shm->dimension) {
+                        if (shm->byte_read
+ == shm->dimension) {
                             //se è stato riscontrato tutto vai nello stato di chiusura connessione
                             close_get_fin(temp_buff, shm);
                             pthread_cancel(shm->tid);
@@ -56,7 +57,8 @@ void send_file( struct temp_buf temp_buff,struct sel_repeat *shm) {
                         }
                     } else {//non é in finestra 
                         rcv_ack_in_window(temp_buff, shm);
-                        if (shm->byte_readed == shm->dimension) {
+                        if (shm->byte_read
+ == shm->dimension) {
                             //se tutti i byte sono stati riscontrati vai in chiusura
                             close_get_fin(temp_buff, shm);
                             pthread_cancel(shm->tid);

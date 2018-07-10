@@ -544,10 +544,14 @@ void rcv_ack_in_window(struct temp_buf temp_buff,struct sel_repeat *shm) {
                 while (shm->win_buf_snd[shm->window_base_snd].acked == 1) { //finquando ho pacchetti riscontrati
                                                                             //avanzo la finestra
                     if (shm->win_buf_snd[shm->window_base_snd].command == DATA) {
-                        if (shm->dimension - shm->byte_readed >= (int)(MAXPKTSIZE - OVERHEAD)) {
-                            shm->byte_readed += (MAXPKTSIZE - OVERHEAD);
+                        if (shm->dimension - shm->byte_read
+ >= (int)(MAXPKTSIZE - OVERHEAD)) {
+                            shm->byte_read
+ += (MAXPKTSIZE - OVERHEAD);
                         } else {
-                            shm->byte_readed += shm->dimension - shm->byte_readed;
+                            shm->byte_read
+ += shm->dimension - shm->byte_read
+;
                         }
                     }
                     shm->win_buf_snd[shm->window_base_snd].acked = 2;//resetta quando scorri finestra
@@ -591,10 +595,14 @@ void rcv_ack_file_in_window(struct temp_buf temp_buff,struct sel_repeat *shm) {
                     shm->win_buf_snd[shm->window_base_snd].acked = 2;//resetta quando scorri finestra
                     shm->window_base_snd = ((shm->window_base_snd) + 1) % (2 * shm->param.window);//avanza la finestra
                     (shm->pkt_fly)--;
-                    if (shm->dimension - shm->byte_readed >= (int)(MAXPKTSIZE - OVERHEAD)) {
-                        shm->byte_readed += (MAXPKTSIZE - OVERHEAD);
+                    if (shm->dimension - shm->byte_read
+ >= (int)(MAXPKTSIZE - OVERHEAD)) {
+                        shm->byte_read
+ += (MAXPKTSIZE - OVERHEAD);
                     } else {
-                        shm->byte_readed += shm->dimension - shm->byte_readed;
+                        shm->byte_read
+ += shm->dimension - shm->byte_read
+;
                     }
                 }
             }
@@ -634,10 +642,14 @@ void rcv_ack_list_in_window(struct temp_buf temp_buff,struct sel_repeat *shm) {/
                     shm-> win_buf_snd[shm->window_base_snd].acked = 2;//resetta quando scorri finestra
                     shm->window_base_snd = ((shm->window_base_snd) + 1) % (2 * shm->param.window);//avanza la finestra
                     (shm->pkt_fly)--;
-                    if (shm->dimension - shm->byte_readed >= (int)(MAXPKTSIZE - OVERHEAD)) {
-                        shm->byte_readed += (MAXPKTSIZE - OVERHEAD);
+                    if (shm->dimension - shm->byte_read
+ >= (int)(MAXPKTSIZE - OVERHEAD)) {
+                        shm->byte_read
+ += (MAXPKTSIZE - OVERHEAD);
                     } else {
-                        shm->byte_readed += shm->dimension - shm->byte_readed;
+                        shm->byte_read
+ += shm->dimension - shm->byte_read
+;
                     }
                 }
             }

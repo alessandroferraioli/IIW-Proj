@@ -46,7 +46,8 @@ void send_list( struct temp_buf temp_buff, struct sel_repeat *shm) {
                 if (seq_is_in_window(shm->window_base_snd, shm->param.window, temp_buff.ack)) {
                     if (temp_buff.command == DATA) {//se è un messaggio contenente dati
                         rcv_ack_list_in_window(temp_buff, shm);
-                        if (shm->byte_readed == shm->dimension) {
+                        if (shm->byte_read
+ == shm->dimension) {
                             close_list(temp_buff, shm);
                             free(temp_list);//liberazione memoria della lista,il puntatore di list è stato spostato per ricevere la lista
                             shm->list = NULL;
@@ -54,7 +55,8 @@ void send_list( struct temp_buf temp_buff, struct sel_repeat *shm) {
                         }
                     } else {//se è un messaggio speciale
                         rcv_ack_in_window(temp_buff, shm);
-                        if(shm->byte_readed==shm->dimension){
+                        if(shm->byte_read
+==shm->dimension){
                             //se tutti i pacchetti sono stati riscontrati vai in chiusura della trasmissione
                             close_list(temp_buff,shm);
                             free(temp_list);//liberazione memoria della lista,il puntatore di list è stato spostato per ricevere la lista
