@@ -13,8 +13,11 @@ int close_connection_put(struct temp_buf temp_buff,struct sel_repeat *shm) {
     alarm(TIMEOUT);
     errno = 0;
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->addr.dest_addr, &shm->addr.len) !=
+        if (recvfrom(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0,
+                     (struct sockaddr *) &shm->address
+.dest_addr, &shm->address
+.len) !=
             -1) {//attendo fin_ack dal server
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {//
@@ -66,7 +69,10 @@ int close_put_send_file(struct sel_repeat *shm){
     alarm(TIMEOUT);
     send_message_in_window(temp_buff, shm, FIN, "FIN");
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff,MAXPKTSIZE,0, (struct sockaddr *) &(shm->addr.dest_addr), &shm->addr.len) != -1) {//attendo risposta del client,
+        if (recvfrom(shm->address
+.sockfd, &temp_buff,MAXPKTSIZE,0, (struct sockaddr *) &(shm->address
+.dest_addr), &shm->address
+.len) != -1) {//attendo risposta del client,
             // aspetto finquando non arriva la risposta o scade il timeout
             print_rcv_message(temp_buff);
             if(temp_buff.command==SYN || temp_buff.command==SYN_ACK){
@@ -120,7 +126,10 @@ long send_put_file(struct sel_repeat *shm) {//invia file con protocollo selectiv
         if (((shm->pkt_fly) < (shm->param.window)) && ((shm->byte_sent) < (shm->dimension))) {
             send_data_in_window(temp_buff, shm);
         }
-        while(recvfrom(shm->addr.sockfd, &temp_buff,MAXPKTSIZE, MSG_DONTWAIT, (struct sockaddr *) &shm->addr.dest_addr, &shm->addr.len) != -1) {//non devo bloccarmi sulla ricezione,se ne trovo uno leggo finquando posso
+        while(recvfrom(shm->address
+.sockfd, &temp_buff,MAXPKTSIZE, MSG_DONTWAIT, (struct sockaddr *) &shm->address
+.dest_addr, &shm->address
+.len) != -1) {//non devo bloccarmi sulla ricezione,se ne trovo uno leggo finquando posso
             print_rcv_message(temp_buff);
             if(temp_buff.command==SYN || temp_buff.command==SYN_ACK){
                 continue;//ignora pacchetto
@@ -187,7 +196,10 @@ void *put_client_job(void*arg){
     send_message_in_window(temp_buff, shm,PUT,temp_buff.payload);
     alarm(TIMEOUT);
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff,MAXPKTSIZE,0, (struct sockaddr *) &shm->addr.dest_addr, &shm->addr.len) != -1) {//attendo risposta del server
+        if (recvfrom(shm->address
+.sockfd, &temp_buff,MAXPKTSIZE,0, (struct sockaddr *) &shm->address
+.dest_addr, &shm->address
+.len) != -1) {//attendo risposta del server
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
                 continue;//ignora pacchetto
             } else {

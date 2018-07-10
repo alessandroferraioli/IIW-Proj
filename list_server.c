@@ -8,7 +8,10 @@ void close_list(struct temp_buf temp_buff,struct sel_repeat *shm) {
 //dopo aver riscontrato tutti i pacchetti manda fin non in finestra
 // senza sequenza e ack e chiudi
     alarm(0);
-    send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len, temp_buff, "FIN",
+    send_message(shm->address
+.sockfd, &shm->address
+.dest_addr, shm->address
+.len, temp_buff, "FIN",
                  FIN, shm->param.loss_prob);
     printf(GREEN"List correctly sent\n"RESET);
     pthread_cancel(shm->tid);
@@ -26,8 +29,11 @@ void send_list( struct temp_buf temp_buff, struct sel_repeat *shm) {
                                                                                                 //della mia finestra e non ho riempito la dimensione byte invio in lista
             send_list_in_window(temp_buff, shm);
         }
-        while(recvfrom(shm->addr.sockfd, &temp_buff,MAXPKTSIZE, MSG_DONTWAIT,
-                     (struct sockaddr *) &shm->addr.dest_addr, &shm->addr.len) !=
+        while(recvfrom(shm->address
+.sockfd, &temp_buff,MAXPKTSIZE, MSG_DONTWAIT,
+                     (struct sockaddr *) &shm->address
+.dest_addr, &shm->address
+.len) !=
             -1) {//non devo bloccarmi sulla ricezione,se ne trovo uno leggo finquando posso
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
@@ -103,8 +109,11 @@ void wait_list_start(struct sel_repeat *shm, struct temp_buf temp_buff) {
     errno = 0;
     alarm(TIMEOUT);
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff,MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->addr.dest_addr, &shm->addr.len) !=
+        if (recvfrom(shm->address
+.sockfd, &temp_buff,MAXPKTSIZE, 0,
+                     (struct sockaddr *) &shm->address
+.dest_addr, &shm->address
+.len) !=
             -1) {   //attendo risposta del client,
                     //aspetto finquando non arriva la risposta o scade il timeout
            
@@ -115,7 +124,10 @@ void wait_list_start(struct sel_repeat *shm, struct temp_buf temp_buff) {
                 alarm(0);//In caso contrario di sicuro ho ricevuto qualcosa che mi piace-->disattivo il timeout
             }
             if (temp_buff.command == FIN) {//se ricevi fin manda fin_ack e chiudi
-                send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len,
+                send_message(shm->address
+.sockfd, &shm->address
+.dest_addr, shm->address
+.len,
                              temp_buff, "FIN_ACK", FIN_ACK, shm->param.loss_prob);
                 alarm(0);
                 pthread_cancel(shm->tid);

@@ -11,7 +11,8 @@
 
 int main_sockfd,msgid,queue_mtx_id,mtx_prefork_id,mtx_file_id,great_alarm_serv=0;//dopo le fork tutti i figli-->sono globali
 // sanno quali sono gli id
-struct select_param param_serv;
+struct params
+ param_serv;
 char*dir_server;
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void timeout_handler_serv(int sig, siginfo_t *si, void *uc){//gestione del segnale alarm
@@ -62,19 +63,19 @@ void allocate_memory_payload(struct sel_repeat **shm){
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void allocate_memory_shm(struct sel_repeat **shm){
-  (*shm)->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*(param_serv.window)));
+  (*shm)->win_buf_rcv=malloc(sizeof(struct rcv_w_buf)*(2*(param_serv.window)));
     if((*shm)->win_buf_rcv==NULL){
         handle_error_with_exit("error in malloc win buf rcv\n");
     }
 
     //alloco memoria buffer di invio
-    (*shm)->win_buf_snd=malloc(sizeof(struct window_snd_buf)*(2*(param_serv.window)));
+    (*shm)->win_buf_snd=malloc(sizeof(struct snd_w_buf)*(2*(param_serv.window)));
     if((*shm)->win_buf_snd==NULL){
         handle_error_with_exit("error in malloc win buf snd\n");
     }
     
-    memset((*shm)->win_buf_rcv,0,sizeof(struct window_rcv_buf)*(2*(param_serv.window)));//inizializza a zero
-    memset((*shm)->win_buf_snd,0,sizeof(struct window_snd_buf)*(2*(param_serv.window)));//inizializza a zero
+    memset((*shm)->win_buf_rcv,0,sizeof(struct rcv_w_buf)*(2*(param_serv.window)));//inizializza a zero
+    memset((*shm)->win_buf_snd,0,sizeof(struct snd_w_buf)*(2*(param_serv.window)));//inizializza a zero
 
     allocate_memory_payload(shm);
 }
@@ -105,14 +106,18 @@ void fillUp_shm(struct sel_repeat **shm_temp,struct msgbuf request,sem_t *mtx_fi
     (*shm_temp)->byte_readed=0;
     (*shm_temp)->byte_written=0;
     (*shm_temp)->byte_sent=0;
-    (*shm_temp)->addr.dest_addr=request.addr;
+    (*shm_temp)->address
+.dest_addr=request.address
+;
     (*shm_temp)->pkt_fly=0;
     (*shm_temp)->mtx_file=mtx_file;
     (*shm_temp)->window_base_rcv=0;
     (*shm_temp)->window_base_snd=0;
     (*shm_temp)->win_buf_snd=0;
     (*shm_temp)->seq_to_send=0;
-    (*shm_temp)->addr.len=sizeof(request.addr);
+    (*shm_temp)->address
+.len=sizeof(request.address
+);
     (*shm_temp)->param.window=param_serv.window;//primo pacchetto della finestra->primo non riscontrato
 
     setup_timer(shm_temp);
@@ -153,15 +158,18 @@ void select_functions(struct temp_buf temp_buff , struct sel_repeat *shm){
             exe_list(temp_buff,shm);
         }
         else if(temp_buff.command==PUT){
-            set_max_buff_rcv_size(shm->addr.sockfd);//lo metto al massimo possibile(in basic.h) senza privilegi root
+            set_max_buff_rcv_size(shm->address
+.sockfd);//lo metto al massimo possibile(in basic.h) senza privilegi root
             exe_put(temp_buff,shm);
-            if(close(shm->addr.sockfd)==-1){
+            if(close(shm->address
+.sockfd)==-1){
                 handle_error_with_exit("error in close socket child process\n");
             }
         }
         else if(temp_buff.command==GET){
             exe_get(temp_buff,shm);
-            if(close(shm->addr.sockfd)==-1){
+            if(close(shm->address
+.sockfd)==-1){
                 handle_error_with_exit("error in close socket child process\n");
             }
         }
@@ -170,7 +178,8 @@ void select_functions(struct temp_buf temp_buff , struct sel_repeat *shm){
         }
         else{
             printf("invalid_command\n");
-            if(close(shm->addr.sockfd)==-1){
+            if(close(shm->address
+.sockfd)==-1){
                 handle_error_with_exit("error in close socket child process\n");
             }
         }
@@ -187,10 +196,12 @@ void fillUp_socket(struct sockaddr_in *serv_addr,struct sel_repeat **shm){
     serv_addr->sin_port=htons(0);
     serv_addr->sin_addr.s_addr=htonl(INADDR_ANY);
 
-    if (((*shm)->addr.sockfd= socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    if (((*shm)->address
+.sockfd= socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         handle_error_with_exit("error in socket create\n");
     }
-    if (bind((*shm)->addr.sockfd, (struct sockaddr *)(serv_addr), sizeof(*serv_addr)) < 0) {//bind con una porta scelta automataticam. dal SO
+    if (bind((*shm)->address
+.sockfd, (struct sockaddr *)(serv_addr), sizeof(*serv_addr)) < 0) {//bind con una porta scelta automataticam. dal SO
         handle_error_with_exit("error in bind\n");
     }
 
@@ -220,10 +231,16 @@ void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg d
     fillUp_socket(&serv_addr,&shm);
 
     //manda syn ack dopo aver ricevuto il syn(richiesta ricevuta) e aspetta il comando del client
-    send_syn_ack(shm->addr.sockfd, &request.addr, sizeof(request.addr),param_serv.loss_prob );
+    send_syn_ack(shm->address
+.sockfd, &request.address
+, sizeof(request.address
+),param_serv.loss_prob );
     alarm(TIMEOUT);     //La funzione alarm() invia al processo corrente il segnale SIGALRM dopo che siano trascorsi seconds secondi.
                         //Per non farlo bloccare sulla recvfrom se non ricevuo nulla 
-    if(recvfrom(shm->addr.sockfd,&temp_buff,MAXPKTSIZE,0,(struct sockaddr *)&(shm->addr.dest_addr),&(shm->addr.len))!=-1){  //ricevi il comando del client in finestra
+    if(recvfrom(shm->address
+.sockfd,&temp_buff,MAXPKTSIZE,0,(struct sockaddr *)&(shm->address
+.dest_addr),&(shm->address
+.len))!=-1){  //ricevi il comando del client in finestra
                                                                                                                             //bloccati finquando non ricevi il comando dal client(almeno che non scada il TIMEOUT)
         alarm(0);//ricevuto il cmd-->metto a 0 il timeout non mi serve piu
         print_rcv_message(temp_buff);
@@ -389,7 +406,8 @@ void make_pool_handler(struct mtx_prefork*mtx_prefork){
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void get_parameter(struct select_param *param_serv,char *line)
+void get_parameter(struct params
+ *param_serv,char *line)
 {
 
 
@@ -423,7 +441,8 @@ int main(int argc,char*argv[]) {//funzione principale processo server
     
     char commandBuffer[MAXCOMMANDLINE+1],*line,*command,localname[80];
     
-    struct sockaddr_in addr,cliaddr;
+    struct sockaddr_in address
+,cliaddr;
     struct msgbuf msgbuf;//struttura del messaggio della coda
 
     struct mtx_prefork*mtx_prefork;//mutex tra processi e thread pool handler
@@ -491,14 +510,21 @@ int main(int argc,char*argv[]) {//funzione principale processo server
     setup_mtx_prefork(mtx_prefork);//inizializza memoria condivisa[uguale a sopra solo che metto gia a 0 la variabile free_process]
 
     //inizializza socket processo principale
-    memset((void *)&addr, 0, sizeof(addr));
-    addr.sin_family=AF_INET;
-    addr.sin_port=htons(SERVER_PORT);
-    addr.sin_addr.s_addr=htonl(INADDR_ANY);
+    memset((void *)&address
+, 0, sizeof(address
+));
+    address
+.sin_family=AF_INET;
+    address
+.sin_port=htons(SERVER_PORT);
+    address
+.sin_addr.s_addr=htonl(INADDR_ANY);
     if ((main_sockfd = socket(AF_INET, SOCK_DGRAM,0)) < 0) {
         handle_error_with_exit("error in socket create\n");
     }
-    if (bind(main_sockfd,(struct sockaddr*)&addr,sizeof(addr)) < 0) {
+    if (bind(main_sockfd,(struct sockaddr*)&address
+,sizeof(address
+)) < 0) {
         handle_error_with_exit("error in bind\n");
     }
 
@@ -514,7 +540,9 @@ int main(int argc,char*argv[]) {//funzione principale processo server
         if ((recvfrom(main_sockfd, commandBuffer, MAXCOMMANDLINE, 0, (struct sockaddr *) &cliaddr, &len)) < 0) {
             handle_error_with_exit("error in recvcommand");//memorizza  l'indirizzo del client e lo scrive in coda
         }
-        msgbuf.addr=cliaddr;//inizializza la struct con addr
+        msgbuf.address
+=cliaddr;//inizializza la struct con address
+
         msgbuf.mtype=1;
         if(msgsnd(msgid,&msgbuf,sizeof(struct msgbuf)-sizeof(long),0)==-1){//inserisce nella coda l'indirizzo del client
             handle_error_with_exit("error in msgsnd\n");

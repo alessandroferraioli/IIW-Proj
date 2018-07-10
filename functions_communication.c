@@ -61,7 +61,8 @@ void print_msg_resent_and_lost(struct temp_buf temp_buff){
 //funzioni per la comunicazione tra 2 host senza protocollo selective repeat
 
 //inizializza pacchetto e manda messaggio
-void send_message(int sockfd, struct sockaddr_in *addr, socklen_t len, struct temp_buf temp_buff, char *data,
+void send_message(int sockfd, struct sockaddr_in *address
+, socklen_t len, struct temp_buf temp_buff, char *data,
                   char command, double loss_prob) {
     better_strcpy(temp_buff.payload, data);
     temp_buff.ack = NOT_AN_ACK;
@@ -70,7 +71,8 @@ void send_message(int sockfd, struct sockaddr_in *addr, socklen_t len, struct te
     temp_buff.lap = NO_LAP;
     //niente ack e sequenza
     if (flip_coin(loss_prob)) {
-        if (sendto(sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) addr, len) ==
+        if (sendto(sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) address
+, len) ==
             -1) {
             handle_error_with_exit("error in sendto\n");
         }
@@ -82,9 +84,11 @@ void send_message(int sockfd, struct sockaddr_in *addr, socklen_t len, struct te
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //ritrasmetti messaggio precedentemente inviato
-void resend_message(int sockfd, struct temp_buf *temp_buff, struct sockaddr_in *addr, socklen_t len, double loss_prob) {
+void resend_message(int sockfd, struct temp_buf *temp_buff, struct sockaddr_in *address
+, socklen_t len, double loss_prob) {
     if (flip_coin(loss_prob)) {
-        if (sendto(sockfd, temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) addr, len) ==
+        if (sendto(sockfd, temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) address
+, len) ==
             -1) {
             handle_error_with_exit("error in sendto\n");
         }
@@ -172,7 +176,10 @@ void send_list_in_window(struct temp_buf temp_buff,struct sel_repeat *shm) {
 
     //invio pkt
     if (flip_coin(shm->param.loss_prob)) {
-        if (sendto(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->addr.dest_addr), shm->addr.len) ==
+        if (sendto(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->address
+.dest_addr), shm->address
+.len) ==
             -1) {
             handle_error_with_exit("error in sendto\n");
         }
@@ -232,7 +239,10 @@ void send_data_in_window(struct temp_buf temp_buff,struct sel_repeat *shm) {
 
     //invio pkt
     if (flip_coin(shm->param.loss_prob)) {
-        if (sendto(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->addr.dest_addr), shm->addr.len) ==
+        if (sendto(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->address
+.dest_addr), shm->address
+.len) ==
             -1) {
             handle_error_with_exit("error in sendto\n");
         }
@@ -285,7 +295,10 @@ void send_message_in_window(struct temp_buf temp_buff,struct sel_repeat *shm,cha
 
     //invio il pkt 
     if (flip_coin(shm->param.loss_prob)) {
-        if (sendto(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &shm->addr.dest_addr,shm->addr.len) ==
+        if (sendto(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &shm->address
+.dest_addr,shm->address
+.len) ==
             -1) {
             handle_error_with_exit("error in sendto\n");
         }
@@ -311,7 +324,10 @@ void rcv_msg_re_send_ack_in_window(struct temp_buf temp_buff,struct sel_repeat *
     better_strcpy(temp_buff.payload, "ACK");
     //lascia invariato il tipo di comando e il lap
     if (flip_coin(shm->param.loss_prob)) {
-        if (sendto(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &shm->addr.dest_addr, shm->addr.len) ==
+        if (sendto(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &shm->address
+.dest_addr, shm->address
+.len) ==
             -1) {
             handle_error_with_exit("error in sendto\n");
         }
@@ -341,7 +357,10 @@ void rcv_list_send_ack_in_window(struct temp_buf temp_buff,struct sel_repeat *sh
     ack_buff.command = DATA;
     ack_buff.lap = temp_buff.lap;
     if (flip_coin(shm->param.loss_prob)) {
-        if (sendto(shm->addr.sockfd, &ack_buff, MAXPKTSIZE, 0, (struct sockaddr *) &shm->addr.dest_addr, shm->addr.len) ==
+        if (sendto(shm->address
+.sockfd, &ack_buff, MAXPKTSIZE, 0, (struct sockaddr *) &shm->address
+.dest_addr, shm->address
+.len) ==
             -1) {
             handle_error_with_exit("error in sendto\n");
         }
@@ -393,7 +412,10 @@ void rcv_data_send_ack_in_window(struct temp_buf temp_buff,struct sel_repeat *sh
 
     //invio ack
     if (flip_coin(shm->param.loss_prob)) {
-        if (sendto(shm->addr.sockfd, &ack_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->addr.dest_addr), shm->addr.len) ==
+        if (sendto(shm->address
+.sockfd, &ack_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->address
+.dest_addr), shm->address
+.len) ==
             -1) {
             handle_error_with_exit("error in sendto\n");
         }
@@ -459,7 +481,10 @@ void rcv_msg_send_ack_in_window(struct temp_buf temp_buff,struct sel_repeat *shm
     ack_buff.lap = temp_buff.lap;
 
     if (flip_coin(shm->param.loss_prob)) {//mando l'ack sulla finestra 
-        if (sendto(shm->addr.sockfd, &ack_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->addr.dest_addr), shm->addr.len) ==
+        if (sendto(shm->address
+.sockfd, &ack_buff, MAXPKTSIZE, 0, (struct sockaddr *) &(shm->address
+.dest_addr), shm->address
+.len) ==
             -1) {
             handle_error_with_exit("error in sendto\n");
         }
@@ -689,7 +714,10 @@ void *rtx_job(void *arg) {
                 copy_buf2_in_buf1(temp_buff.payload, shm->win_buf_snd[node->seq].payload, MAXPKTSIZE - OVERHEAD);
                 temp_buff.command=shm->win_buf_snd[node->seq].command;
                 
-                resend_message(shm->addr.sockfd,&temp_buff,&shm->addr.dest_addr,shm->addr.len,shm->param.loss_prob);
+                resend_message(shm->address
+.sockfd,&temp_buff,&shm->address
+.dest_addr,shm->address
+.len,shm->param.loss_prob);
                 if(clock_gettime(CLOCK_MONOTONIC, &shm->win_buf_snd[node->seq].time)!=0){
                     handle_error_with_exit("error in get_time\n");
                 }
@@ -719,7 +747,10 @@ void *rtx_job(void *arg) {
                 lock_mtx(&(shm->mtx));
                 copy_buf2_in_buf1(temp_buff.payload, shm->win_buf_snd[node->seq].payload, MAXPKTSIZE - OVERHEAD);
                 temp_buff.command=shm->win_buf_snd[node->seq].command;
-                resend_message(shm->addr.sockfd,&temp_buff,&shm->addr.dest_addr,shm->addr.len,shm->param.loss_prob);
+                resend_message(shm->address
+.sockfd,&temp_buff,&shm->address
+.dest_addr,shm->address
+.len,shm->param.loss_prob);
                 if(clock_gettime(CLOCK_MONOTONIC, &shm->win_buf_snd[node->seq].time)!=0){
                     handle_error_with_exit("error in get_time\n");
                 }

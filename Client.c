@@ -10,7 +10,8 @@
 #include "lock_functions.h"
 
 int great_alarm_client = 0; //diventa 1 quando scatta il timer globale
-struct select_param param_client;
+struct params
+ param_client;
 char *client_dir;
 
 void timeout_handler_client(int sig, siginfo_t *si, void *uc){ //signal handler del timer globale
@@ -70,11 +71,14 @@ void initialize_shm(struct sel_repeat *shm, int sockfd, struct sockaddr_in serv_
         shm->dev_RTT_ms=0;
         shm->est_RTT_ms=TIMER_BASE_ADAPTIVE;
     }
-    shm->addr.sockfd=sockfd;
-    shm->addr.dest_addr=serv_addr;
+    shm->address
+.sockfd=sockfd;
+    shm->address
+.dest_addr=serv_addr;
     shm->dimension=-1;//DEVE ESSERE FATTO FUORI DALLA FUNZIONE
     shm->filename=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD)); //DEVE ESSERE FATTO FUORI DALLA FUNZIONE
-    shm->addr.len=sizeof(serv_addr);
+    shm->address
+.len=sizeof(serv_addr);
     shm->head=NULL;
     shm->tail=NULL;
     
@@ -102,19 +106,19 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
     }
 
     better_strcpy(shm->filename,filename);
-    shm->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*param_client.window));
+    shm->win_buf_rcv=malloc(sizeof(struct rcv_w_buf)*(2*param_client.window));
 
     if(shm->win_buf_rcv==NULL){
         handle_error_with_exit("Error in malloc win_buf_rcv\n");
     }
-    shm->win_buf_snd=malloc(sizeof(struct window_snd_buf)*(2*param_client.window));
+    shm->win_buf_snd=malloc(sizeof(struct snd_w_buf)*(2*param_client.window));
 
     if(shm->win_buf_snd==NULL){
         handle_error_with_exit("Error in malloc win_buf_snd\n");
     }
 
-    memset(shm->win_buf_rcv, 0, sizeof(struct window_rcv_buf) * (2 * param_client.window)); //inizializza a zero
-    memset(shm->win_buf_snd, 0, sizeof(struct window_snd_buf) * (2 * param_client.window)); //inizializza a zero
+    memset(shm->win_buf_rcv, 0, sizeof(struct rcv_w_buf) * (2 * param_client.window)); //inizializza a zero
+    memset(shm->win_buf_snd, 0, sizeof(struct snd_w_buf) * (2 * param_client.window)); //inizializza a zero
 
     for (int i = 0; i < 2 *(param_client.window); i++) {
         shm->win_buf_snd[i].payload =malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
@@ -133,7 +137,8 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
         shm->win_buf_rcv[i].lap = -1;
     }
 
-    set_max_buff_rcv_size(shm->addr.sockfd);
+    set_max_buff_rcv_size(shm->address
+.sockfd);
     get_client(shm);
     byte_written=shm->byte_written;
     //libera memoria
@@ -157,20 +162,20 @@ long list_command(int sockfd, struct sockaddr_in serv_addr) { //svolgi la list c
     shm->fd=-1;
     shm->dimension=-1;
     shm->filename=NULL;
-    shm->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*param_client.window));
+    shm->win_buf_rcv=malloc(sizeof(struct rcv_w_buf)*(2*param_client.window));
 
     if(shm->win_buf_rcv==NULL){
         handle_error_with_exit("error in malloc win buf rcv\n");
     }
 
-    shm->win_buf_snd=malloc(sizeof(struct window_snd_buf)*(2*param_client.window));
+    shm->win_buf_snd=malloc(sizeof(struct snd_w_buf)*(2*param_client.window));
 
     if(shm->win_buf_snd==NULL){
         handle_error_with_exit("error in malloc win buf snd\n");
     }
 
-    memset(shm->win_buf_rcv, 0, sizeof(struct window_rcv_buf) * (2 * param_client.window));//inizializza a zero
-    memset(shm->win_buf_snd, 0, sizeof(struct window_snd_buf) * (2 * param_client.window));//inizializza a zero
+    memset(shm->win_buf_rcv, 0, sizeof(struct rcv_w_buf) * (2 * param_client.window));//inizializza a zero
+    memset(shm->win_buf_snd, 0, sizeof(struct snd_w_buf) * (2 * param_client.window));//inizializza a zero
 
     for (int i = 0; i < 2 *(param_client.window); i++) {
         shm->win_buf_snd[i].payload =malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
@@ -194,7 +199,8 @@ long list_command(int sockfd, struct sockaddr_in serv_addr) { //svolgi la list c
 
     }
 
-    set_max_buff_rcv_size(shm->addr.sockfd);
+    set_max_buff_rcv_size(shm->address
+.sockfd);
     list_client(shm);
     byte_readed=shm->byte_readed;
     
@@ -240,19 +246,19 @@ long put_command(int sockfd, struct sockaddr_in serv_addr, char *filename,long d
     free(path);
     path=NULL;
 
-    shm->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*param_client.window));
+    shm->win_buf_rcv=malloc(sizeof(struct rcv_w_buf)*(2*param_client.window));
 
     if(shm->win_buf_rcv==NULL){
         handle_error_with_exit("Error in malloc win_buf_rcv\n");
     }
-    shm->win_buf_snd=malloc(sizeof(struct window_snd_buf)*(2*param_client.window));
+    shm->win_buf_snd=malloc(sizeof(struct snd_w_buf)*(2*param_client.window));
 
     if(shm->win_buf_snd==NULL){
         handle_error_with_exit("Error in malloc win_buf_snd\n");
     }
 
-    memset(shm->win_buf_rcv, 0, sizeof(struct window_rcv_buf) * (2 * param_client.window)); //inizializza a zero
-    memset(shm->win_buf_snd, 0, sizeof(struct window_snd_buf) * (2 * param_client.window)); //inizializza a zero
+    memset(shm->win_buf_rcv, 0, sizeof(struct rcv_w_buf) * (2 * param_client.window)); //inizializza a zero
+    memset(shm->win_buf_snd, 0, sizeof(struct snd_w_buf) * (2 * param_client.window)); //inizializza a zero
 
     for (int i = 0; i < 2 *(param_client.window); i++) {
         shm->win_buf_snd[i].payload =malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));

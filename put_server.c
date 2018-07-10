@@ -17,8 +17,11 @@ void wait_put_fin(struct sel_repeat *shm) {
     errno = 0;
     
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE,0, (struct sockaddr *) &shm->addr.dest_addr,
-                     &shm->addr.len) != -1) {//attendo messaggio di fin,
+        if (recvfrom(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE,0, (struct sockaddr *) &shm->address
+.dest_addr,
+                     &shm->address
+.len) != -1) {//attendo messaggio di fin,
 
             print_rcv_message(temp_buff);
             
@@ -30,7 +33,10 @@ void wait_put_fin(struct sel_repeat *shm) {
 
             if (temp_buff.command == FIN) {//se ricevi fin manda fin_ack solo una volta e termina sia i thread sia la trasmissione
                 alarm(0);
-                send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len, temp_buff, "FIN_ACK", FIN_ACK,
+                send_message(shm->address
+.sockfd, &shm->address
+.dest_addr, shm->address
+.len, temp_buff, "FIN_ACK", FIN_ACK,
                              shm->param.loss_prob);
                 check_md5(shm->filename, shm->md5_sent, shm->dimension);//verifichiamo che md5 ricevuto e file ricevuto abbiano lo stesso md5
                 pthread_cancel(shm->tid);
@@ -82,8 +88,11 @@ void  rcv_put_file(struct sel_repeat *shm) {
     }
     errno = 0;
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &shm->addr.dest_addr,
-                     &shm->addr.len) != -1) {
+        if (recvfrom(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *) &shm->address
+.dest_addr,
+                     &shm->address
+.len) != -1) {
            
             print_rcv_message(temp_buff);
 
@@ -97,7 +106,10 @@ void  rcv_put_file(struct sel_repeat *shm) {
             //CASO FIN
             if (temp_buff.command == FIN) {//se ricevi fin manda fin_ack solo una volta
                 // e termina sia thread sia trasmissione
-                send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len, temp_buff,
+                send_message(shm->address
+.sockfd, &shm->address
+.dest_addr, shm->address
+.len, temp_buff,
                              "FIN_ACK", FIN_ACK, shm->param.loss_prob);
                 alarm(0);
                 printf(GREEN "Request completed\n"RESET);

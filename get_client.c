@@ -16,8 +16,11 @@ int close_connection_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
     alarm(TIMEOUT);
     errno = 0;
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->addr.dest_addr, &shm->addr.len) !=
+        if (recvfrom(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0,
+                     (struct sockaddr *) &shm->address
+.dest_addr, &shm->address
+.len) !=
             -1) {//attendo fin_ack dal server
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {//
@@ -70,8 +73,11 @@ int wait_for_fin_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
     alarm(TIMEOUT);//chiusura temporizzata
     errno = 0;
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->addr.dest_addr, &shm->addr.len) != -1) {//attendo messaggio di fin,
+        if (recvfrom(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0,
+                     (struct sockaddr *) &shm->address
+.dest_addr, &shm->address
+.len) != -1) {//attendo messaggio di fin,
             // aspetto finquando non lo ricevo
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
@@ -121,8 +127,11 @@ long rcv_get_file(struct temp_buf temp_buff, struct sel_repeat *shm) {
     send_message_in_window(temp_buff, shm, START, "START");
     errno = 0;
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->addr.dest_addr, &shm->addr.len) !=
+        if (recvfrom(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0,
+                     (struct sockaddr *) &shm->address
+.dest_addr, &shm->address
+.len) !=
             -1) {//bloccati finquando non ricevi file
             // o altri messaggi
             print_rcv_message(temp_buff);
@@ -180,8 +189,11 @@ int wait_for_get_dimension(struct temp_buf temp_buff, struct sel_repeat *shm) {
     send_message_in_window(temp_buff, shm, GET, temp_buff.payload);//manda messaggio get
     alarm(TIMEOUT);
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->addr.dest_addr, &shm->addr.len) !=
+        if (recvfrom(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0,
+                     (struct sockaddr *) &shm->address
+.dest_addr, &shm->address
+.len) !=
             -1) {//attendo risposta del server
             //mi blocco sulla risposta del server
             print_rcv_message(temp_buff);

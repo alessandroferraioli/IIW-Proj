@@ -77,14 +77,14 @@ struct temp_buf{//struttura del pacchetto da inviare
     char payload[MAXPKTSIZE-OVERHEAD];// dati pacchetto
 };
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-struct window_rcv_buf{//elemento della finestra di ricezione
+struct rcv_w_buf{//elemento della finestra di ricezione
     char received;//ricevuto 1==si 0==no
     char command;//comando
     int lap;
     char*payload;//dati pacchetto
 };
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-struct window_snd_buf{//elemento della finestra di trasmissione
+struct snd_w_buf{//elemento della finestra di trasmissione
     char acked;//riscontrato 1==si 0==da riscontrare 2==vuoto
     char command;//comando
     struct timespec time;//usato per timer adattativo
@@ -92,13 +92,15 @@ struct window_snd_buf{//elemento della finestra di trasmissione
     char*payload;//dati pacchetto
 };
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-struct addr{//struttura contentente le informazioni per mandare un pacchetto ad un altro host
+struct address
+{//struttura contentente le informazioni per mandare un pacchetto ad un altro host
     int sockfd;
     struct sockaddr_in dest_addr;
     socklen_t len;
 };
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-struct select_param{//parametri di esecuzione
+struct params
+{//parametri di esecuzione
     int window;//grandezza finestra
     double loss_prob;//prob perdita
     int timer_ms;//tempo di ritrasmissione in millisecondi ,se t==0 timer adattativo
@@ -107,12 +109,14 @@ struct select_param{//parametri di esecuzione
 struct sel_repeat{  //struttura condivisa tra i 2 thread necessaria sia per la sincronizzazione
                         //sia per svolgere la richiesta(put/get/list) vera e propria
 
-    struct addr addr;//indirizzo dell'host
+    struct address
+ address
+;//indirizzo dell'host
     int pkt_fly;//numero pacchetti in volo (va da 0 a w-1)
     pthread_mutex_t mtx;//mutex
     sem_t*mtx_file;
-    struct window_snd_buf *win_buf_snd;//finestra trasmissione (va da 0 a 2w-1)
-    struct window_rcv_buf *win_buf_rcv;//finestra ricezione (va da 0 a 2w-1)
+    struct snd_w_buf *win_buf_snd;//finestra trasmissione (va da 0 a 2w-1)
+    struct rcv_w_buf *win_buf_rcv;//finestra ricezione (va da 0 a 2w-1)
     char md5_sent[MD5_LEN + 1];//md5
     long dimension;//dimensione del file/lista
     char*filename;
@@ -124,7 +128,8 @@ struct sel_repeat{  //struttura condivisa tra i 2 thread necessaria sia per la s
     long byte_written;//byte scritti e riscontrati lato receiver
     long byte_sent;//byte inviati con pacchetti senza contare quelli di ritrasmissione
     char*list;//puntatore alla lista dei file
-    struct select_param param;//parametri
+    struct params
+ param;//parametri
     double est_RTT_ms;//estimated RTT necessario per timer adattativo
     double dev_RTT_ms;
     char adaptive;//se 1 timer adattativo se 0 timer non adattativo
@@ -141,7 +146,8 @@ struct mtx_prefork{//mutex usato dai processi server e dal thread pool handler p
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 struct msgbuf{//struttura della coda condivisa dei processi per leggere le richieste dei client
     long mtype;
-    struct sockaddr_in addr;
+    struct sockaddr_in address
+;
 };
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 struct node  {//struttura di un nodo della lista dinamica ordianta,la lista tiene traccia delle trasmissioni e delle ritrasmissioni

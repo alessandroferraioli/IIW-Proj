@@ -11,7 +11,10 @@
 void close_get_fin( struct temp_buf temp_buff,struct sel_repeat *shm) {//manda fin non in finestra senza sequenza e ack e chiudi
     alarm(0);
     //manda fin
-    send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len, temp_buff, "FIN",
+    send_message(shm->address
+.sockfd, &shm->address
+.dest_addr, shm->address
+.len, temp_buff, "FIN",
                  FIN, shm->param.loss_prob);
     pthread_cancel(shm->tid);
     printf(GREEN"File %s correctly sent\n"RESET, shm->filename);
@@ -27,8 +30,11 @@ void send_file( struct temp_buf temp_buff,struct sel_repeat *shm) {
             send_data_in_window(temp_buff, shm);
         }
 
-        while (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, MSG_DONTWAIT, (struct sockaddr *) &shm->addr.dest_addr,
-                        &shm->addr.len) !=
+        while (recvfrom(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, MSG_DONTWAIT, (struct sockaddr *) &shm->address
+.dest_addr,
+                        &shm->address
+.len) !=
                -1) {//non devo bloccarmi sulla ricezione,se ne trovo uno leggo finquando posso
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
@@ -130,8 +136,11 @@ void wait_get_start(struct temp_buf temp_buff, struct sel_repeat *shm) {
 
 
     while (1) {
-        if (recvfrom(shm->addr.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *)
-                &shm->addr.dest_addr, &shm->addr.len) != -1) {  //attendo risposta del client,
+        if (recvfrom(shm->address
+.sockfd, &temp_buff, MAXPKTSIZE, 0, (struct sockaddr *)
+                &shm->address
+.dest_addr, &shm->address
+.len) != -1) {  //attendo risposta del client,
                                                                 //aspetto finquando non arriva la risposta o scade il timeout
             print_rcv_message(temp_buff);
             
@@ -142,7 +151,10 @@ void wait_get_start(struct temp_buf temp_buff, struct sel_repeat *shm) {
             }
             
             if (temp_buff.command == FIN) {//se ricevi fin manda fin_ack e termina i 2 thread
-                send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len, temp_buff,
+                send_message(shm->address
+.sockfd, &shm->address
+.dest_addr, shm->address
+.len, temp_buff,
                              "FIN_ACK", FIN_ACK, shm->param.loss_prob);
                 alarm(0);
                 printf(GREEN "Request completed\n"RESET);
