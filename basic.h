@@ -69,7 +69,7 @@
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //pacchetto da mandare con selective repeat ack=not_an_ack seq=not_a_pkt
-struct temp_buffer{//struttura del pacchetto da inviare
+struct temp_buf{//struttura del pacchetto da inviare
     int seq;//numero sequenza
     int ack;//numero ack
     int lap;//giri di finestra
@@ -104,7 +104,7 @@ struct select_param{//parametri di esecuzione
     int timer_ms;//tempo di ritrasmissione in millisecondi ,se t==0 timer adattativo
 };
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-struct shm_sel_repeat{  //struttura condivisa tra i 2 thread necessaria sia per la sincronizzazione
+struct sel_repeat{  //struttura condivisa tra i 2 thread necessaria sia per la sincronizzazione
                         //sia per svolgere la richiesta(put/get/list) vera e propria
 
     struct addr addr;//indirizzo dell'host
@@ -180,7 +180,7 @@ void unlock_mtx(pthread_mutex_t *mtx);
 void initialize_cond(pthread_cond_t*cond);
 void wait_on_a_condition(pthread_cond_t*cond,pthread_mutex_t *mtx);
 void unlock_thread_on_a_condition(pthread_cond_t*cond);
-char to_resend(struct shm_sel_repeat *shm, struct node node);
+char to_resend(struct sel_repeat *shm, struct node node);
 char calc_file_MD5(char *file_name, char *md5_sum, long dimension);
 void check_md5(char*filename,char*md5_to_check, long dimension);
 void set_max_buff_rcv_size(int sockfd);

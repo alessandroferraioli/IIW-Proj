@@ -1,3 +1,3 @@
 #include "basic.h"
 
-void put_client(struct shm_sel_repeat *shm);
+void put_client(struct sel_repeat *shm);

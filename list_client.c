@@ -7,7 +7,7 @@
 #include "dynamic_list.h"
 
 //dopo aver ricevuto messaggio di errore manda fin e aspetta fin_ack cosi puoi chiudere la trasmissione
-int close_connection_list(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
+int close_connection_list(struct temp_buf temp_buff, struct sel_repeat *shm) {
     send_message_in_window(temp_buff,shm, FIN,"FIN");//manda messaggio di fin
     alarm(TIMEOUT);
     errno = 0;
@@ -59,7 +59,7 @@ int close_connection_list(struct temp_buffer temp_buff, struct shm_sel_repeat *s
     }
 }
 //è stata ricevuta tutta la lista aspetta il fin dal server per chiudere la trasmissione
-long wait_for_fin_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
+long wait_for_fin_list(struct temp_buf temp_buff,struct sel_repeat *shm) {
     alarm(TIMEOUT);//chiusura temporizzata
     errno = 0;
     while (1) {
@@ -106,7 +106,7 @@ long wait_for_fin_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) 
     }
 }
 //ricevuta dimensione della lista,manda messaggio di start per far capire al sender che è pronto a ricevere i dati
-long rcv_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
+long rcv_list(struct temp_buf temp_buff,struct sel_repeat *shm) {
     alarm(TIMEOUT);
     send_message_in_window(temp_buff,shm, START,"START" );
     errno = 0;
@@ -164,7 +164,7 @@ long rcv_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
     }
 }
 //manda messaggio get e aspetta messaggio contentente la dimensione della lista
-long wait_for_list_dimension(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
+long wait_for_list_dimension(struct temp_buf temp_buff,struct sel_repeat *shm) {
     errno = 0;
     char *first;
     better_strcpy(temp_buff.payload, "list");
@@ -229,13 +229,13 @@ long wait_for_list_dimension(struct temp_buffer temp_buff,struct shm_sel_repeat 
 }
 //thread trasmettitore e ricevitore
 void *list_client_job(void *arg) {
-    struct shm_sel_repeat *shm = arg;
-    struct temp_buffer temp_buff;
+    struct sel_repeat *shm = arg;
+    struct temp_buf temp_buff;
     wait_for_list_dimension(temp_buff,shm);
     return NULL;
 }
 
-void list_client(struct shm_sel_repeat *shm) {//crea i 2 thread:
+void list_client(struct sel_repeat *shm) {//crea i 2 thread:
     //trasmettitore,ricevitore;
     //ritrasmettitore
     pthread_t tid_snd,tid_rtx;

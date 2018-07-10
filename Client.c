@@ -23,7 +23,7 @@ void timeout_handler_client(int sig, siginfo_t *si, void *uc){ //signal handler 
 
 }
 
-void free_shm(struct shm_sel_repeat *shm){
+void free_shm(struct sel_repeat *shm){
     
     for (int i = 0; i < 2 *(param_client.window); i++) {
         free(shm->win_buf_snd[i].payload);
@@ -41,7 +41,7 @@ void free_shm(struct shm_sel_repeat *shm){
 
 }
 
-void initialize_shm(struct shm_sel_repeat *shm, int sockfd, struct sockaddr_in serv_addr ){
+void initialize_shm(struct sel_repeat *shm, int sockfd, struct sockaddr_in serv_addr ){
  
 
     initialize_mtx(&(shm->mtx));
@@ -82,7 +82,7 @@ void initialize_shm(struct shm_sel_repeat *shm, int sockfd, struct sockaddr_in s
 
 long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*mtx_file) {//svolgi la get con connessione già instaurata
     long byte_written=0;
-    struct shm_sel_repeat *shm=malloc(sizeof(struct shm_sel_repeat));//alloca memoria condivisa thread
+    struct sel_repeat *shm=malloc(sizeof(struct sel_repeat));//alloca memoria condivisa thread
     if(filename==NULL){
         handle_error_with_exit("error in get_command\n");
     }
@@ -147,7 +147,7 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
 long list_command(int sockfd, struct sockaddr_in serv_addr) { //svolgi la list con connessione già instaurata
     
     long byte_readed=0;
-    struct shm_sel_repeat *shm=malloc(sizeof(struct shm_sel_repeat)); //alloca memoria condivisa thread
+    struct sel_repeat *shm=malloc(sizeof(struct sel_repeat)); //alloca memoria condivisa thread
     if(shm==NULL){
         handle_error_with_exit("error in malloc\n");
     }
@@ -215,7 +215,7 @@ long put_command(int sockfd, struct sockaddr_in serv_addr, char *filename,long d
     if(path==NULL){
         handle_error_with_exit("Error in generate_full_pathname\n");
     }
-    struct shm_sel_repeat *shm=malloc(sizeof(struct shm_sel_repeat)); //alloca memoria condivisa thread
+    struct sel_repeat *shm=malloc(sizeof(struct sel_repeat)); //alloca memoria condivisa thread
     if(shm==NULL){
         handle_error_with_exit("Error in malloc\n");
     }
@@ -289,7 +289,7 @@ struct sockaddr_in send_syn_recv_ack(int sockfd, struct sockaddr_in main_servadd
     char rtx = 0;
     struct sigaction sa;
     socklen_t len = sizeof(main_servaddr);
-    struct temp_buffer temp_buff;
+    struct temp_buf temp_buff;
     sa.sa_flags =SA_SIGINFO;
     sa.sa_sigaction = timeout_handler_client;
 

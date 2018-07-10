@@ -4,7 +4,7 @@
 #include "list_server.h"
 #include "functions_communication.h"
 
-void close_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
+void close_list(struct temp_buf temp_buff,struct sel_repeat *shm) {
 //dopo aver riscontrato tutti i pacchetti manda fin non in finestra
 // senza sequenza e ack e chiudi
     alarm(0);
@@ -16,7 +16,7 @@ void close_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //messaggio start ricevuto,thread pronto alla trasmissione
-void send_list( struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
+void send_list( struct temp_buf temp_buff, struct sel_repeat *shm) {
     char *temp_list;//creare la lista e poi inviarla in parti
 
     temp_list = shm->list;
@@ -81,7 +81,7 @@ void send_list( struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto messaggio list manda la dimensione della lista e aspetta start
-void wait_list_start(struct shm_sel_repeat *shm, struct temp_buffer temp_buff) {
+void wait_list_start(struct sel_repeat *shm, struct temp_buf temp_buff) {
     char dim[15];
     lock_sem(shm->mtx_file);
 
@@ -160,14 +160,14 @@ void wait_list_start(struct shm_sel_repeat *shm, struct temp_buffer temp_buff) {
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //thread trasmettitore e ricevitore
 void *list_server_job(void *arg) {
-    struct shm_sel_repeat *shm= arg;
-    struct temp_buffer temp_buff;
+    struct sel_repeat *shm= arg;
+    struct temp_buf temp_buff;
     wait_list_start(shm, temp_buff);
     return NULL;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void list_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
+void list_server(struct sel_repeat *shm) {//crea i 2 thread:
    
     pthread_t tid_snd,tid_rtx; //trasmettitore e ricevitore  +  ritrasmettitore
     if(pthread_create(&tid_rtx,NULL,rtx_job,shm)!=0){//rtx_job uguale per ogni processo 
@@ -191,8 +191,8 @@ void list_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
     return;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void exe_list(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
-    //verifica che il file (con filename scritto dentro temp_buffer esiste)
+void exe_list(struct temp_buf temp_buff,struct sel_repeat *shm) {
+    //verifica che il file (con filename scritto dentro temp_buf esiste)
     // ,manda la dimensione, aspetta lo start e inizia a mandare il file,
     // temp_buff contiene il pacchetto con comando get+filename
     rcv_msg_send_ack_in_window(temp_buff, shm);

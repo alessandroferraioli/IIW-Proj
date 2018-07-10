@@ -7,7 +7,7 @@
 #include "lock_functions.h"
 
 //entra qui dopo aver ricevuto il messaggio di errore
-int close_connection_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
+int close_connection_put(struct temp_buf temp_buff,struct sel_repeat *shm) {
     send_message_in_window(temp_buff,
                            shm, FIN, "FIN");//manda messaggio di fin
     alarm(TIMEOUT);
@@ -60,9 +60,9 @@ int close_connection_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm
     }
 }
 //entra qui quando hai riscontrato tutti i pacchetti
-int close_put_send_file(struct shm_sel_repeat *shm){
+int close_put_send_file(struct sel_repeat *shm){
     //in questo stato ho ricevuto tutti gli ack (compreso l'ack della put),posso ricevere ack duplicati,FIN_ACK,start(fuori finestra)
-    struct temp_buffer temp_buff;
+    struct temp_buf temp_buff;
     alarm(TIMEOUT);
     send_message_in_window(temp_buff, shm, FIN, "FIN");
     while (1) {
@@ -111,9 +111,9 @@ int close_put_send_file(struct shm_sel_repeat *shm){
         }
     }
 }
-long send_put_file(struct shm_sel_repeat *shm) {//invia file con protocollo selective repeat,
+long send_put_file(struct sel_repeat *shm) {//invia file con protocollo selective repeat,
 // quando riesce a riscontrare tutto va nello stato di chiusura
-    struct temp_buffer temp_buff;
+    struct temp_buf temp_buff;
     alarm(TIMEOUT);
     while (1) {
         //finquando pkt_fly <W e byte_sent <dimensione del file puoi mandare  un pacchetto file
@@ -173,8 +173,8 @@ long send_put_file(struct shm_sel_repeat *shm) {//invia file con protocollo sele
 
 //thread trasmettitore e ricevitore
 void *put_client_job(void*arg){
-    struct shm_sel_repeat *shm=arg;
-    struct temp_buffer temp_buff;
+    struct sel_repeat *shm=arg;
+    struct temp_buf temp_buff;
     char dim_string[15];
     sprintf(dim_string, "%ld", shm->dimension);
     better_strcpy(temp_buff.payload,dim_string);
@@ -232,7 +232,7 @@ void *put_client_job(void*arg){
     return NULL;
 }
 
-void put_client(struct shm_sel_repeat *shm){//crea i 2 thread:
+void put_client(struct sel_repeat *shm){//crea i 2 thread:
     //trasmettitore,ricevitore;
     //ritrasmettitore
     pthread_t tid_snd,tid_rtx;

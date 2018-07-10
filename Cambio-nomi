@@ -60,12 +60,12 @@ readn-->read_nbytes[manage_io.c]
 VARIABILI
 
 [Basic.h]
-temp_buffer -> temp_buf
+shm_sel_repeat -> sel_repeat
+temp_buf -> temp_buf
 window_snd_buf -> snd_w_buf
 window_rcv_buf -> rcv_w_buf
 addr -> address
 select_param -> params
-shm_sel_repeat -> sel_repeat
 byte_readed -> byte_read
 
 	CLIENT

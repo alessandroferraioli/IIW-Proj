@@ -8,7 +8,7 @@
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //è stato riscontrato tutto manda il fin e termina trasmissione
-void close_get_fin( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {//manda fin non in finestra senza sequenza e ack e chiudi
+void close_get_fin( struct temp_buf temp_buff,struct sel_repeat *shm) {//manda fin non in finestra senza sequenza e ack e chiudi
     alarm(0);
     //manda fin
     send_message(shm->addr.sockfd, &shm->addr.dest_addr, shm->addr.len, temp_buff, "FIN",
@@ -19,7 +19,7 @@ void close_get_fin( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {//
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto start inizia a mandare il file
-void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
+void send_file( struct temp_buf temp_buff,struct sel_repeat *shm) {
     alarm(TIMEOUT);
     
     while (1) {
@@ -82,7 +82,7 @@ void send_file( struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto il comando get manda dimensione del file e aspetta start
-void wait_get_start(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
+void wait_get_start(struct temp_buf temp_buff, struct sel_repeat *shm) {
     char *path, dim_string[15];
     int file_try_lock;
     path = generate_full_pathname(shm->filename, dir_server);
@@ -185,13 +185,13 @@ void wait_get_start(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //thread trasmettitore e ricevitore
 void *get_server_job(void *arg) {
-    struct shm_sel_repeat *shm = arg;
-    struct temp_buffer temp_buff;
+    struct sel_repeat *shm = arg;
+    struct temp_buf temp_buff;
     wait_get_start(temp_buff,shm);
     return NULL;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void get_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
+void get_server(struct sel_repeat *shm) {//crea i 2 thread:
     //trasmettitore,ricevitore;
     //ritrasmettitore
     pthread_t tid_snd, tid_rtx;
@@ -215,8 +215,8 @@ void get_server(struct shm_sel_repeat *shm) {//crea i 2 thread:
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //ricevuto messaggio get filename
-void exe_get(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
-    //verifica prima che il file con nome dentro temp_buffer esiste
+void exe_get(struct temp_buf temp_buff,struct sel_repeat *shm) {
+    //verifica prima che il file con nome dentro temp_buf esiste
     //manda la dimensione
     //aspetta lo start e inizia a mandare il file
     //temp_buff contiene il pacchetto con comando get

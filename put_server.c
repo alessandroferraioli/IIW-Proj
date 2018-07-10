@@ -10,9 +10,9 @@
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //dopo aver ricevuto tutto il file mettiti in ricezione del fin,manda fin_ack e termina i 2 thread
-void wait_put_fin(struct shm_sel_repeat *shm) {
+void wait_put_fin(struct sel_repeat *shm) {
     
-    struct temp_buffer temp_buff;
+    struct temp_buf temp_buff;
     alarm(2);//chiusura temporizzata
     errno = 0;
     
@@ -70,9 +70,9 @@ void wait_put_fin(struct shm_sel_repeat *shm) {
     }
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void  rcv_put_file(struct shm_sel_repeat *shm) {
+void  rcv_put_file(struct sel_repeat *shm) {
     //dopo aver ricevuto messaggio di put manda messaggio di start e si mette in ricezione del file 
-    struct temp_buffer temp_buff;
+    struct temp_buf temp_buff;
     
     alarm(TIMEOUT);
     if (shm->fd != -1) {
@@ -160,12 +160,12 @@ void  rcv_put_file(struct shm_sel_repeat *shm) {
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //thread trasmettitore e ricevitore
 void *put_server_job(void *arg) {
-    struct shm_sel_repeat *shm = arg;
+    struct sel_repeat *shm = arg;
     rcv_put_file(shm);
     return NULL;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void put_server(struct shm_sel_repeat *shm) {   //crea i 2 thread:
+void put_server(struct sel_repeat *shm) {   //crea i 2 thread:
                                                 //trasmettitore,ricevitore;
                                                 //ritrasmettitore
     pthread_t tid_snd, tid_rtx;
@@ -189,8 +189,8 @@ void put_server(struct shm_sel_repeat *shm) {   //crea i 2 thread:
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //ricevuto pacchetto con put dimensione e filename
-void exe_put(struct temp_buffer temp_buff,struct shm_sel_repeat *shm) {
-    //verifica prima che il file esiste(con filename dentro temp_buffer)
+void exe_put(struct temp_buf temp_buff,struct sel_repeat *shm) {
+    //verifica prima che il file esiste(con filename dentro temp_buf)
     //manda start e si mette in ricezione del file,
     char *path, *first, *payload;
     payload = malloc(sizeof(char) * (MAXPKTSIZE - OVERHEAD));

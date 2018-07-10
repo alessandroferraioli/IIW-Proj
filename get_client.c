@@ -6,7 +6,7 @@
 #include "functions_communication.h"
 #include "lock_functions.h"
 //dopo aver ricevuto messaggio di errore aspetta messaggio di fin_ack
-int close_connection_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
+int close_connection_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
     char*error_message=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD));
     if(error_message==NULL){
         handle_error_with_exit("error in malloc\n");
@@ -61,7 +61,7 @@ int close_connection_get(struct temp_buffer temp_buff, struct shm_sel_repeat *sh
     }
 }
 //è stato ricevuto tutto il file aspetta il fin per chiudere la connessione
-int wait_for_fin_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
+int wait_for_fin_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
     char *path;
     path = generate_full_pathname(shm->filename, client_dir);
     if (path == NULL) {
@@ -116,7 +116,7 @@ int wait_for_fin_get(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
     }
 }
 //ricevuta dimensione del file,manda messaggio di start per far capire al sender che è pronto a ricevere i dati
-long rcv_get_file(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
+long rcv_get_file(struct temp_buf temp_buff, struct sel_repeat *shm) {
     alarm(TIMEOUT);
     send_message_in_window(temp_buff, shm, START, "START");
     errno = 0;
@@ -172,7 +172,7 @@ long rcv_get_file(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
     }
 }
 //manda messaggio get e aspetta messaggio contentente la dimensione del file
-int wait_for_get_dimension(struct temp_buffer temp_buff, struct shm_sel_repeat *shm) {
+int wait_for_get_dimension(struct temp_buf temp_buff, struct sel_repeat *shm) {
     errno = 0;
     char *path, *first, *payload;
     better_strcpy(temp_buff.payload, "get ");
@@ -253,14 +253,14 @@ int wait_for_get_dimension(struct temp_buffer temp_buff, struct shm_sel_repeat *
 
 //thread trasmettitore e ricevitore
 void *get_client_job(void *arg) {
-    struct shm_sel_repeat *shm = arg;
-    struct temp_buffer temp_buff;
+    struct sel_repeat *shm = arg;
+    struct temp_buf temp_buff;
     wait_for_get_dimension(temp_buff, shm);
     return NULL;
 }
 
 
-void get_client(struct shm_sel_repeat *shm) {//crea i 2 thread:
+void get_client(struct sel_repeat *shm) {//crea i 2 thread:
     //trasmettitore,ricevitore;
     //ritrasmettitore
     pthread_t tid_snd, tid_rtx;

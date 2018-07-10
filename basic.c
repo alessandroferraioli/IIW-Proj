@@ -138,7 +138,7 @@ void set_max_buff_rcv_size(int sockfd){//imposta il buffer ricezione della socke
     return;
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-char to_resend(struct shm_sel_repeat *shm, struct node node){//verifica se un pacchetto è da ritrasmettere
+char to_resend(struct sel_repeat *shm, struct node node){//verifica se un pacchetto è da ritrasmettere
     if(shm==NULL){
         handle_error_with_exit("error in to_resend shm is NULL\n");
     }

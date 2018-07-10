@@ -34,7 +34,7 @@ void setup_mtx_prefork(struct mtx_prefork*mtx_prefork){//inizializza memoria con
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void allocate_memory_payload(struct shm_sel_repeat **shm){
+void allocate_memory_payload(struct sel_repeat **shm){
     for (int i = 0; i < 2 *(param_serv.window); i++) {//alloco memoria per i payload di ogni buffer
         
         (*shm)->win_buf_snd[i].payload =malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD+1));
@@ -61,7 +61,7 @@ void allocate_memory_payload(struct shm_sel_repeat **shm){
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void allocate_memory_shm(struct shm_sel_repeat **shm){
+void allocate_memory_shm(struct sel_repeat **shm){
   (*shm)->win_buf_rcv=malloc(sizeof(struct window_rcv_buf)*(2*(param_serv.window)));
     if((*shm)->win_buf_rcv==NULL){
         handle_error_with_exit("error in malloc win buf rcv\n");
@@ -80,7 +80,7 @@ void allocate_memory_shm(struct shm_sel_repeat **shm){
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void setup_timer(struct shm_sel_repeat **shm_temp){
+void setup_timer(struct sel_repeat **shm_temp){
      if(param_serv.timer_ms !=0 ) {
         (*shm_temp)->param.timer_ms = param_serv.timer_ms;
         (*shm_temp)->adaptive = 0;
@@ -96,7 +96,7 @@ void setup_timer(struct shm_sel_repeat **shm_temp){
 
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void fillUp_shm(struct shm_sel_repeat **shm_temp,struct msgbuf request,sem_t *mtx_file){
+void fillUp_shm(struct sel_repeat **shm_temp,struct msgbuf request,sem_t *mtx_file){
 
     (*shm_temp)->fd=-1;
     (*shm_temp)->dimension=-1;
@@ -124,7 +124,7 @@ void fillUp_shm(struct shm_sel_repeat **shm_temp,struct msgbuf request,sem_t *mt
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void free_memory_shm(struct shm_sel_repeat **shm){
+void free_memory_shm(struct sel_repeat **shm){
  //libera la memoria della shared memory a fine lavoro
     for (int i = 0; i < 2 *(param_serv.window); i++) {
         free((*shm)->win_buf_snd[i].payload);
@@ -145,7 +145,7 @@ void free_memory_shm(struct shm_sel_repeat **shm){
 }
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void select_functions(struct temp_buffer temp_buff , struct shm_sel_repeat *shm){
+void select_functions(struct temp_buf temp_buff , struct sel_repeat *shm){
 
     //in base al comando ricevuto il processo figlio server esegue uno dei 3 comandi
        
@@ -180,7 +180,7 @@ void select_functions(struct temp_buffer temp_buff , struct shm_sel_repeat *shm)
 
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-void fillUp_socket(struct sockaddr_in *serv_addr,struct shm_sel_repeat **shm){
+void fillUp_socket(struct sockaddr_in *serv_addr,struct sel_repeat **shm){
 
 
     serv_addr->sin_family=AF_INET;
@@ -200,9 +200,9 @@ void fillUp_socket(struct sockaddr_in *serv_addr,struct shm_sel_repeat **shm){
 void reply_syn_exe_cmd(struct msgbuf request,sem_t*mtx_file){//Ho preso il msg dalla coda di richieste e soddisfo il cmd
     
     struct sockaddr_in serv_addr;
-    struct temp_buffer temp_buff;//pacchetto da inviare
+    struct temp_buf temp_buff;//pacchetto da inviare
    
-    struct shm_sel_repeat *shm=malloc(sizeof(struct shm_sel_repeat));
+    struct sel_repeat *shm=malloc(sizeof(struct sel_repeat));
 
     if(shm==NULL){
         handle_error_with_exit("error in malloc\n");
