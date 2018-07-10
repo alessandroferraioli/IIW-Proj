@@ -67,6 +67,9 @@
 #ifndef LINE_H
 #define LINE_H
 
+clock_t start,stop;
+
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //pacchetto da mandare con selective repeat ack=not_an_ack seq=not_a_pkt
 struct temp_buf{//struttura del pacchetto da inviare

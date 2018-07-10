@@ -5,6 +5,9 @@
 #include "get_client.h"
 #include "functions_communication.h"
 #include "lock_functions.h"
+
+
+
 //dopo aver ricevuto messaggio di errore aspetta messaggio di fin_ack
 int close_connection_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
     char*error_message=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD));
@@ -267,6 +270,8 @@ int wait_for_get_dimension(struct temp_buf temp_buff, struct sel_repeat *shm) {
 void *get_client_job(void *arg) {
     struct sel_repeat *shm = arg;
     struct temp_buf temp_buff;
+        start=clock();
+
     wait_for_get_dimension(temp_buff, shm);
     return NULL;
 }
