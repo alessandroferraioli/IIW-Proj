@@ -5,7 +5,10 @@
 #include "list_client.h"
 #include "functions_communication.h"
 #include "dynamic_list.h"
+#include "time.h"
 
+
+clock_t start,stop;
 //dopo aver ricevuto messaggio di errore manda fin e aspetta fin_ack cosi puoi chiudere la trasmissione
 int close_connection_list(struct temp_buf temp_buff, struct sel_repeat *shm) {
     send_message_in_window(temp_buff,shm, FIN,"FIN");//manda messaggio di fin
@@ -180,12 +183,8 @@ long wait_for_list_dimension(struct temp_buf temp_buff,struct sel_repeat *shm) {
     send_message_in_window(temp_buff,shm , LIST,temp_buff.payload);//manda messaggio get
     alarm(TIMEOUT);
     while (1) {
-        if (recvfrom(shm->address
-.sockfd, &temp_buff,MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->address
-.dest_addr, &shm->address
-.len) !=
-            -1) {//attendo risposta del server
+        if (recvfrom(shm->address.sockfd, &temp_buff,MAXPKTSIZE, 0,
+                     (struct sockaddr *) &shm->address.dest_addr, &shm->address.len) !=-1) {//attendo risposta del server
             //mi blocco sulla risposta del server
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
@@ -208,7 +207,9 @@ long wait_for_list_dimension(struct temp_buf temp_buff,struct sel_repeat *shm) {
                 first = shm->list;
                 rcv_list(temp_buff,shm);
                 if (shm->byte_written == shm->dimension) {
-                    printf("File's list:\n%s", first);//stampa della lista ottenuta
+                    printf("Files' list:\n%s", first);//stampa della lista ottenuta
+                    stop=clock();
+                    printf("\nTime  %f",(double)(stop-start));
                 }
                 free(first);//il puntatore di list è stato spostato per inviare la lista
                 shm->list = NULL;
@@ -243,6 +244,8 @@ long wait_for_list_dimension(struct temp_buf temp_buff,struct sel_repeat *shm) {
 void *list_client_job(void *arg) {
     struct sel_repeat *shm = arg;
     struct temp_buf temp_buff;
+    //start timer
+    start=clock();
     wait_for_list_dimension(temp_buff,shm);
     return NULL;
 }

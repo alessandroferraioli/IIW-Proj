@@ -62,6 +62,8 @@ VARIABILI
 [Basic.h]
 shm_sel_repeat -> sel_repeat
 temp_buffer -> temp_buf
+
+
 window_snd_buf -> snd_w_buf
 window_rcv_buf -> rcv_w_buf
 addr -> address
