@@ -41,8 +41,6 @@ wait_for_fin_put-->wait_put_fin[put_server.c]
 
 	CLIENT
 
-dir_client -> client_dir [Client.c, Client.h, get_client.c]
-cliaddr -> client_addr [Client.c]
 
 
 
@@ -60,6 +58,20 @@ readn-->read_nbytes[manage_io.c]
 
 -------------------------------------------------------------------------------------------
 VARIABILI
+
+[Basic.h]
+temp_buffer -> temp_buf
+window_snd_buf -> snd_w_buf
+window_rcv_buf -> rcv_w_buf
+addr -> address
+select_param -> params
+shm_sel_repeat -> sel_repeat
+byte_readed -> byte_read
+
+	CLIENT
+
+dir_client -> client_dir [Client.c, Client.h, get_client.c]
+cliaddr -> client_addr [Client.c]
 
 
 
