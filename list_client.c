@@ -8,7 +8,6 @@
 #include "time.h"
 
 
-clock_t start,stop;
 //dopo aver ricevuto messaggio di errore manda fin e aspetta fin_ack cosi puoi chiudere la trasmissione
 int close_connection_list(struct temp_buf temp_buff, struct sel_repeat *shm) {
     send_message_in_window(temp_buff,shm, FIN,"FIN");//manda messaggio di fin
@@ -208,8 +207,7 @@ long wait_for_list_dimension(struct temp_buf temp_buff,struct sel_repeat *shm) {
                 rcv_list(temp_buff,shm);
                 if (shm->byte_written == shm->dimension) {
                     printf("Files' list:\n%s", first);//stampa della lista ottenuta
-                    stop=clock();
-                    printf("\nTime  %f",(double)(stop-start));
+                
                 }
                 free(first);//il puntatore di list è stato spostato per inviare la lista
                 shm->list = NULL;
@@ -245,7 +243,6 @@ void *list_client_job(void *arg) {
     struct sel_repeat *shm = arg;
     struct temp_buf temp_buff;
     //start timer
-    start=clock();
     wait_for_list_dimension(temp_buff,shm);
     return NULL;
 }
