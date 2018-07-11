@@ -270,7 +270,7 @@ int wait_for_get_dimension(struct temp_buf temp_buff, struct sel_repeat *shm) {
 void *get_client_job(void *arg) {
     struct sel_repeat *shm = arg;
     struct temp_buf temp_buff;
-        start=clock();
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
     wait_for_get_dimension(temp_buff, shm);
     return NULL;

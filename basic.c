@@ -29,7 +29,6 @@ char calc_file_MD5(char *filename, char *md5_sum, long dimension){//calcola md5 
 void check_md5(char*filename,char*md5_to_check, long dimension) {//verifica che 2 md5 sono uguali
     if (dimension >=MAX_MD5_SIZE){
         printf(YELLOW "File %s received,md5 not available due to file size\n"RESET, filename);
-        printf("/n Time get : %f /n",(double)(stop-start));
     }else {
         char md5[MD5_LEN + 1];
         if (filename == NULL || md5_to_check == NULL) {
@@ -41,7 +40,14 @@ void check_md5(char*filename,char*md5_to_check, long dimension) {//verifica che 
         if (strcmp(md5_to_check, md5) != 0) {
             printf(RED "File %s corrupted\n"RESET, filename);
         } else {
+            clock_gettime(CLOCK_MONOTONIC_RAW, &end);
             printf(GREEN "File %s correctly received\n"RESET, filename);
+
+            uint64_t delta_us = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+
+            printf("Timer get %lu\n", delta_us);
+
+
         }
     }
     return;

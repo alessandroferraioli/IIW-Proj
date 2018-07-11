@@ -17,6 +17,10 @@
 #include <semaphore.h>
 #include <unistd.h>
 #include <wait.h>
+#include "time.h"
+#include <sys/time.h>
+
+
 
 #define MAXCOMMANDLINE 320//lunghezza massima comando che  inserisce il client
 #define MAXFILENAME 255//lunghezza massima filename
@@ -67,7 +71,7 @@
 #ifndef LINE_H
 #define LINE_H
 
-clock_t start,stop;
+struct timespec start, end;
 
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
