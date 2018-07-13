@@ -510,11 +510,11 @@ int main(int argc, char *argv[]) { //funzione principale client concorrente
     check_if_dir_exist(argv[1]);
     client_dir=add_slash_to_dir(argv[1]);
     better_strcpy(localname,"./parameter.txt");
-    fd = open(localname, O_RDONLY);//apre il file parameter per leggere i parametri di input
+    fd = open(localname, O_RDONLY); //apre il file parameter per leggere i parametri di input
     if (fd == -1) {
         handle_error_with_exit("parameter.txt in ./ not found\n");
     }
-    line = malloc(sizeof(char)*MAXLINE);//alloca buffer per leggere dal file parameter.txt
+    line = malloc(sizeof(char)*MAXLINE); //alloca buffer per leggere dal file parameter.txt
     if(line==NULL){
         handle_error_with_exit("Error in malloc\n");
     }
@@ -525,7 +525,7 @@ int main(int argc, char *argv[]) { //funzione principale client concorrente
     }
     //inizializza i parametri di esecuzione
     if(count_word_in_buf(line)!=3){
-        handle_error_with_exit("'parameter.txt' must have 3 parameters <W><loss_prob><timer>\n");
+        handle_error_with_exit("'parameter.txt' must have 3 parameters <W> <loss_prob> <timer>\n");
     }
     param_client.window = parse_integer_and_move(&line);
     if (param_client.window < 1) {
