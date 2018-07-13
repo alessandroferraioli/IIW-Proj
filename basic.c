@@ -28,24 +28,24 @@ char calc_file_MD5(char *filename, char *md5_sum, long dimension){//calcola md5 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 void check_md5(char*filename,char*md5_to_check, long dimension) {//verifica che 2 md5 sono uguali
     if (dimension >=MAX_MD5_SIZE){
-        printf(YELLOW "File %s received,md5 not available due to file size\n"RESET, filename);
+        printf(YELLOW "File %s received, md5 not available due to file size\n"RESET, filename);
     }else {
         char md5[MD5_LEN + 1];
         if (filename == NULL || md5_to_check == NULL) {
-            handle_error_with_exit("error in check md5\n");
+            handle_error_with_exit("Error in check md5\n");
         }
         if (!calc_file_MD5(filename, md5, dimension)) {
             handle_error_with_exit("error in calculate md5\n");
         }
         if (strcmp(md5_to_check, md5) != 0) {
-            printf(RED "File %s corrupted\n"RESET, filename);
-        } else {
+            printf(RED "Error: file %s is corrupted\n"RESET, filename);
+        } else 
             clock_gettime(CLOCK_MONOTONIC_RAW, &end);
             printf(GREEN "File %s correctly received\n"RESET, filename);
 
             uint64_t delta_us = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
 
-            printf("Timer get %lu\n", delta_us);
+            // printf("Timer get %lu\n", delta_us);
 
 
         }
@@ -497,7 +497,7 @@ char* files_in_dir(char* path,long lenght) {
     DIR *d;
     struct dirent *dir;
     char *list;
-    list = malloc(sizeof(char)*lenght);
+    list = malloc(sizeof(char) *lenght);
     if(list==NULL){
         handle_error_with_exit("error in malloc\n");
     }
@@ -516,7 +516,7 @@ char* files_in_dir(char* path,long lenght) {
         closedir(d);
     }
     else{
-        handle_error_with_exit("error in scan directory\n");
+        handle_error_with_exit("Error in scan directory\n");
     }
     return (list);
 }

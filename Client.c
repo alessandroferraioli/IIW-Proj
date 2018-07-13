@@ -138,12 +138,11 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
         shm->win_buf_rcv[i].lap = -1;
     }
 
-    set_max_buff_rcv_size(shm->address
-.sockfd);
+    set_max_buff_rcv_size(shm->address.sockfd);
     get_client(shm);
     byte_written=shm->byte_written;
-    //libera memoria
     
+    //libera memoria
     free_shm(shm);
 
     return byte_written;
@@ -152,8 +151,7 @@ long get_command(int sockfd, struct sockaddr_in serv_addr, char *filename,sem_t*
 
 long list_command(int sockfd, struct sockaddr_in serv_addr) { //svolgi la list con connessione già instaurata
     
-    long byte_read
-=0;
+    long byte_read=0;
     struct sel_repeat *shm=malloc(sizeof(struct sel_repeat)); //alloca memoria condivisa thread
     if(shm==NULL){
         handle_error_with_exit("error in malloc\n");
@@ -440,11 +438,11 @@ void client_put_job(char *filename, long dimension) {
     if(file_try_lock==-1){
         if(errno==EWOULDBLOCK){
             errno=0;
-            printf(RED"File %s not available at the moment\n"RESET,filename);
+            printf(RED"File %s is not available at the moment\n"RESET,filename);
             exit(EXIT_FAILURE);
         }
         else {
-            handle_error_with_exit("error in try_lock\n");
+            handle_error_with_exit("Error in try_lock\n");
         }
     }
     file_unlock(fd);
@@ -556,10 +554,11 @@ int main(int argc, char *argv[]) { //funzione principale client concorrente
     if ((filename = malloc(sizeof(char) * (MAXFILENAME))) == NULL) { //contiene il filename del comando digitato
         handle_error_with_exit("Error in malloc filename\n");
     }
-    printf("Choose one command:\n1-list\n2-get <filename>\n3-put <filename>\n4-local list\n5-exit(interrupts all pending requests)\n");
-    for (;;) { //ciclo infinito che associa ad ogni comando che digita l'utente un processo che esegue il comando
+    printf("Choose one command:\n-list\n-get <filename>\n-put <filename>\n-local list\n-exit(interrupts all pending requests)\n");
+    for (;;) { //ciclo infinito; ad ogni comando dell'utente associa un processo che lo svolge
 
         check_and_parse_command(command, filename); //inizializza command,filename e size
+
         if (!is_blank(filename) && (strncmp(command, "put",3) == 0)) {
             char *path = alloca(sizeof(char) * (strlen(filename) + path_len + 1));
             better_strcpy(path, client_dir);
@@ -567,7 +566,7 @@ int main(int argc, char *argv[]) { //funzione principale client concorrente
             better_strcpy(path, filename);
             path = path - path_len;
             if (!file_exist(path)) {
-                printf(RED"File %s not exist\n"RESET,path);
+                printf(RED"File %s doesn't exist\n"RESET,path);
                 continue;
             } else {
                 printf("File %s has size %ld bytes,confirm upload? [y/n]\n",filename, get_file_size(path));

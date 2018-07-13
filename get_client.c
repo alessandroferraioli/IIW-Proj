@@ -12,7 +12,7 @@
 int close_connection_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
     char*error_message=malloc(sizeof(char)*(MAXPKTSIZE-OVERHEAD));
     if(error_message==NULL){
-        handle_error_with_exit("error in malloc\n");
+        handle_error_with_exit("Error in malloc\n");
     }
     better_strcpy(error_message,temp_buff.payload);
     send_message_in_window(temp_buff, shm, FIN, "FIN");//manda messaggio di fin
@@ -24,14 +24,14 @@ int close_connection_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
                      (struct sockaddr *) &shm->address
 .dest_addr, &shm->address
 .len) !=
-            -1) {//attendo fin_ack dal server
+            -1) { //attendo fin_ack dal server
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {//
-                continue;//ignora pacchetto
+                continue; //ignora pacchetto
             } else {
                 alarm(0);
             }
-            if (temp_buff.command == FIN_ACK) {//se ricevi fin_ack termina i 2 thread
+            if (temp_buff.command == FIN_ACK) { //se ricevi fin_ack termina i 2 thread
                 alarm(0);
                 pthread_cancel(shm->tid);
                 printf(RED "File %s %s\n"RESET,shm->filename,error_message);
@@ -39,7 +39,7 @@ int close_connection_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
             } else if (temp_buff.seq == NOT_A_PKT && temp_buff.ack != NOT_AN_ACK) {//se è un ack
                 if (seq_is_in_window(shm->window_base_snd, shm->param.window, temp_buff.ack)) {//se è in finestra
                     if (temp_buff.command == DATA) {
-                        handle_error_with_exit("impossibile ricevere dati dopo aver ricevuto messaggio errore\n");
+                        handle_error_with_exit("Impossibile ricevere dati dopo aver ricevuto messaggio errore\n");
                     } else {
                         rcv_ack_in_window(temp_buff, shm);
                     }
@@ -55,7 +55,7 @@ int close_connection_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
                 handle_error_with_exit("Internal error\n");
             }
         } else if (errno != EINTR) {
-            handle_error_with_exit("error in recvfrom\n");
+            handle_error_with_exit("Error in recvfrom\n");
         }
         if (great_alarm_client == 1) {//se è scaduto il timer termina i 2 thread della trasmissione
             great_alarm_client = 0;
@@ -71,16 +71,13 @@ int wait_for_fin_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
     char *path;
     path = generate_full_pathname(shm->filename, client_dir);
     if (path == NULL) {
-        handle_error_with_exit("error in generate full pathname\n");
+        handle_error_with_exit("Error while generating full pathname\n");
     }
     alarm(TIMEOUT);//chiusura temporizzata
     errno = 0;
     while (1) {
-        if (recvfrom(shm->address
-.sockfd, &temp_buff, MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->address
-.dest_addr, &shm->address
-.len) != -1) {//attendo messaggio di fin,
+        if (recvfrom(shm->address.sockfd, &temp_buff, MAXPKTSIZE, 0,
+                     (struct sockaddr *) &shm->address.dest_addr, &shm->address.len) != -1) { //attendo messaggio di fin,
             // aspetto finquando non lo ricevo
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
@@ -88,7 +85,7 @@ int wait_for_fin_get(struct temp_buf temp_buff, struct sel_repeat *shm) {
             } else {
                 alarm(0);
             }
-            if (temp_buff.command == FIN) {//se ricevi fin termina i 2 thread
+            if (temp_buff.command == FIN) { //se ricevi fin termina i 2 thread
                 alarm(0);
                 check_md5(path, shm->md5_sent, shm->dimension);
                 pthread_cancel(shm->tid);
@@ -130,16 +127,12 @@ long rcv_get_file(struct temp_buf temp_buff, struct sel_repeat *shm) {
     send_message_in_window(temp_buff, shm, START, "START");
     errno = 0;
     while (1) {
-        if (recvfrom(shm->address
-.sockfd, &temp_buff, MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->address
-.dest_addr, &shm->address
-.len) !=
-            -1) {//bloccati finquando non ricevi file
+        if (recvfrom(shm->address.sockfd, &temp_buff, MAXPKTSIZE, 0,
+            (struct sockaddr *) &shm->address.dest_addr, &shm->address.len) !=-1) {//bloccati finquando non ricevi file
             // o altri messaggi
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
-                continue;//ignora pacchetto
+                continue; //ignora pacchetto
             } else {
                 alarm(0);
             }
@@ -163,7 +156,7 @@ long rcv_get_file(struct temp_buf temp_buff, struct sel_repeat *shm) {
                         return shm->byte_written;
                     }
                 } else {
-                    handle_error_with_exit(RED "ricevuto messaggio speciale in finestra durante ricezione file\n"RESET);
+                    handle_error_with_exit(RED "Ricevuto messaggio speciale in finestra durante ricezione file\n"RESET);
 
                 }
                 alarm(TIMEOUT);
@@ -192,12 +185,8 @@ int wait_for_get_dimension(struct temp_buf temp_buff, struct sel_repeat *shm) {
     send_message_in_window(temp_buff, shm, GET, temp_buff.payload);//manda messaggio get
     alarm(TIMEOUT);
     while (1) {
-        if (recvfrom(shm->address
-.sockfd, &temp_buff, MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->address
-.dest_addr, &shm->address
-.len) !=
-            -1) {//attendo risposta del server
+        if (recvfrom(shm->address.sockfd, &temp_buff, MAXPKTSIZE, 0,
+                     (struct sockaddr *) &shm->address.dest_addr, &shm->address.len) !=-1) {//attendo risposta del server
             //mi blocco sulla risposta del server
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {
@@ -212,18 +201,18 @@ int wait_for_get_dimension(struct temp_buf temp_buff, struct sel_repeat *shm) {
                 lock_sem(shm->mtx_file);
                 path = generate_multi_copy(client_dir, shm->filename);
                 if (path == NULL) {
-                    handle_error_with_exit("error:there are too much copies of the file\n");
+                    handle_error_with_exit("Error:there are too much copies of the file\n");
                 }
                 shm->fd = open(path, O_WRONLY | O_CREAT, 0666);
                 if (shm->fd == -1) {
-                    handle_error_with_exit("error in open file\n");
+                    handle_error_with_exit("Error in 'open' function\n");
                 }
                 free(path);
                 file_lock_write(shm->fd);
                 unlock_sem(shm->mtx_file);
                 payload = malloc(sizeof(char) * (MAXPKTSIZE - OVERHEAD));
                 if (payload == NULL) {
-                    handle_error_with_exit("error in malloc\n");
+                    handle_error_with_exit("Error in malloc\n");
                 }
                 copy_buf2_in_buf1(payload, temp_buff.payload, MAXPKTSIZE - OVERHEAD);
                 first = payload;
@@ -235,13 +224,13 @@ int wait_for_get_dimension(struct temp_buf temp_buff, struct sel_repeat *shm) {
                 free(first);
                 rcv_get_file(temp_buff, shm);
                 if (close(shm->fd) == -1) {
-                    handle_error_with_exit("error in close file\n");
+                    handle_error_with_exit("Error in 'close' function\n");
                 }
                 pthread_cancel(shm->tid);
                 file_unlock(shm->fd);
                 pthread_exit(NULL);
-            } else if (temp_buff.seq == NOT_A_PKT && temp_buff.ack != NOT_AN_ACK) {//se è ack
-                if (seq_is_in_window(shm->window_base_snd, shm->param.window, temp_buff.ack)) {//se è in finestra
+            } else if (temp_buff.seq == NOT_A_PKT && temp_buff.ack != NOT_AN_ACK) { //se è ack
+                if (seq_is_in_window(shm->window_base_snd, shm->param.window, temp_buff.ack)) { //se è in finestra
                     if (temp_buff.command == DATA) {
                         handle_error_with_exit("error ack wait for get dimension\n");
                     }
@@ -254,7 +243,7 @@ int wait_for_get_dimension(struct temp_buf temp_buff, struct sel_repeat *shm) {
                 handle_error_with_exit("Internal error\n");
             }
         } else if (errno != EINTR) {//se è scaduto il timer termina i 2 thread della trasmissione
-            handle_error_with_exit("error in recvfrom\n");
+            handle_error_with_exit("Error in recvfrom\n");
         }
         if (great_alarm_client == 1) {
             printf(RED"Server is not available,request get %s\n"RESET, shm->filename);
