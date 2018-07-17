@@ -533,7 +533,7 @@ int main(int argc,char*argv[]) {//funzione principale processo server
 
     //Da qui continua solo il processo padre-->i figli non ritornano dalla child_job()
     make_pool_handler(mtx_prefork);//crea il thread che gestisce la riserva di processi
-    printf(GREEN"Bootstrap completed\n"RESET);
+    printf(GREEN"Setup completed\n"RESET);
 
     //Ciclicamente vedo se arrivano msg dal client e li metto in coda
     while(1) {

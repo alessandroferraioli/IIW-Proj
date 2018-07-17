@@ -569,7 +569,7 @@ int main(int argc, char *argv[]) { //funzione principale client concorrente
                 printf(RED"File %s doesn't exist\n"RESET,path);
                 continue;
             } else {
-                printf("File %s has size %ld bytes,confirm upload? [y/n]\n",filename, get_file_size(path));
+                printf("Do you want to send file %s ? size [%ld bytes]? [y/n]\n",filename, get_file_size(path));
                 while (1) {
                     if (fgets(conf_upload, MAXLINE, stdin) == NULL) {
                         handle_error_with_exit("Error in fgets\n");
