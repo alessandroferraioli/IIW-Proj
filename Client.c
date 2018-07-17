@@ -416,6 +416,12 @@ void client_get_job(char *filename, sem_t* mtx_file) {
     exit(EXIT_SUCCESS);
 }
 
+void clearScreen()
+{
+    system("clear");
+    printf(">");
+}
+
 void client_put_job(char *filename, long dimension) { 
 
 //upload e filename già verificato,inizializza socket, ricevi indirizzo del processo server figlio e inizia comando put
@@ -498,7 +504,7 @@ int main(int argc, char *argv[]) { //funzione principale client concorrente
     if (argc != 2) {
         handle_error_with_exit("Usage: ./client <directory>\n");
     }
-
+    clearScreen();
     key=get_key('a');
     mtx_file_id=get_id_shared_mem_with_key(sizeof(sem_t),key); //id semaforo condiviso
     mtx_file=(sem_t*)attach_shm(mtx_file_id); //puntatore a memoria condivisa contentente semaforo
@@ -554,7 +560,7 @@ int main(int argc, char *argv[]) { //funzione principale client concorrente
     if ((filename = malloc(sizeof(char) * (MAXFILENAME))) == NULL) { //contiene il filename del comando digitato
         handle_error_with_exit("Error in malloc filename\n");
     }
-    printf("Choose one command:\n-list\n-get <filename>\n-put <filename>\n-local list\n-exit(interrupts all pending requests)\n");
+    printf("Choose one command:\n -list\n -get <filename>\n -put <filename>\n -local list\n -exit(interrupts all pending requests)\n");
     for (;;) { //ciclo infinito; ad ogni comando dell'utente associa un processo che lo svolge
 
         check_and_parse_command(command, filename); //inizializza command,filename e size
