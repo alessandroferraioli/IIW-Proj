@@ -111,13 +111,8 @@ void wait_list_start(struct sel_repeat *shm, struct temp_buf temp_buff) {
     errno = 0;
     alarm(TIMEOUT);
     while (1) {
-        if (recvfrom(shm->address
-.sockfd, &temp_buff,MAXPKTSIZE, 0,
-                     (struct sockaddr *) &shm->address
-.dest_addr, &shm->address
-.len) !=
-            -1) {   //attendo risposta del client,
-                    //aspetto finquando non arriva la risposta o scade il timeout
+        if (recvfrom(shm->address.sockfd, &temp_buff,MAXPKTSIZE, 0,(struct sockaddr *) &shm->address.dest_addr, &shm->address.len) !=-1) {  //attendo risposta del client,
+                                                                                                                                            //aspetto finquando non arriva la risposta o scade il timeout
            
             print_rcv_message(temp_buff);
             if (temp_buff.command == SYN || temp_buff.command == SYN_ACK) {//Voglio un dim ack
@@ -126,11 +121,7 @@ void wait_list_start(struct sel_repeat *shm, struct temp_buf temp_buff) {
                 alarm(0);//In caso contrario di sicuro ho ricevuto qualcosa che mi piace-->disattivo il timeout
             }
             if (temp_buff.command == FIN) {//se ricevi fin manda fin_ack e chiudi
-                send_message(shm->address
-.sockfd, &shm->address
-.dest_addr, shm->address
-.len,
-                             temp_buff, "FIN_ACK", FIN_ACK, shm->param.loss_prob);
+                send_message(shm->address.sockfd, &shm->address.dest_addr, shm->address.len,temp_buff, "FIN_ACK", FIN_ACK, shm->param.loss_prob);
                 alarm(0);
                 pthread_cancel(shm->tid);
                 printf(GREEN"Empty list sent\n"RESET);
